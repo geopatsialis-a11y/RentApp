@@ -19,17 +19,18 @@ public class Member
     [Required, MaxLength(50)]
     public required string LastName { get; set; }
     
-    [Required, MaxLength(9)]
-    public required string Afm { get; set; }
+    [MaxLength(9)]
+    public string? Afm { get; set; }
     
-    [Required, MaxLength(11)]
-    public required string Amka { get; set; }
+    [ MaxLength(11)]
+    public string? Amka { get; set; }
 
     public DateTime Created { get; set; } = DateTime.UtcNow;
     public DateTime LastActive { get; set; } = DateTime.UtcNow;
 
     // Navigation Properties
     [ForeignKey(nameof(Id))]
+    [JsonIgnore]
     public  AppUser User { get; set; } = null!;
 
 

@@ -7,9 +7,17 @@ namespace API.Interfaces;
 public interface IMemberRepository
 {
     Task<Member?> GetMemberByIdAsync (string id);
-    Task<IReadOnlyList<MemberListDto>> GetAllAsync();
-    Task AddAsync(MemberRegisterDto memberRegisterDto);
+    Task<Member?> GetMemberByEmailAsync(string email);
+    Task<IReadOnlyList<Member>> GetAllAsync();
+
+    Task<AppUser> AddTenantAsync(TenantRegisterDto tenantRegisterDto);
+    
+    Task InviteMemberAsync(MemberInviteDto dto, Guid tenantId);
+    Task<MemberInviteInfoDto?> GetInviteInfoAsync(string token);
+    Task<AppUser> RegisterFromInviteAsync(MemberRegisterFromInviteDto dto);
+
+
     Task SoftDelete(Member member);
     void Update(Member member);
-    Task<bool> SaveAllAsyng();
+
 }

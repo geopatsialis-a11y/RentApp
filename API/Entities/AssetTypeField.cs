@@ -22,9 +22,21 @@ public class AssetTypeField: BaseEntity
     public required string Label { get; set; } // Για το UI (π.χ. "ISBN Βιβλίου", "Ύψος Οροφής")
 
     public FieldDataType DataType { get; set; }
+    public string? Placeholder { get; set; }
+
+    public string? DefaultValue { get; set; }
+
+    public int DisplayOrder { get; set; }
+
+    public string? ValidationRegex { get; set; }
+
+    public decimal? MinValue { get; set; }
+
+    public decimal? MaxValue { get; set; }
 
     public bool IsRequired { get; set; }
 
     // Navigation Properties
     public  ICollection<AssetAttributeValue> AttributeValues { get; set; } = new List<AssetAttributeValue>();
+    public ICollection<AssetTypeFieldOption> Options { get; set; } = new List<AssetTypeFieldOption>();
 }

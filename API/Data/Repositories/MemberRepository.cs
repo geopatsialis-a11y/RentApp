@@ -8,56 +8,176 @@ using Microsoft.EntityFrameworkCore;
 
 namespace API.Data.Repositories;
 
-public class MemberRepositor (AppDbContext context,UserManager<AppUser> userManager) : IMemberRepository
+public class MemberRepository (
+                AppDbContext context,
+                UserManager<AppUser> userManager,
+                IEmailService emailService,
+                ITenantProvider tenantProvider) : IMemberRepository
 {
-    public async Task AddAsync(MemberRegisterDto dto)
+    
+    //==============================================================================
+    //     ADD NEW TENANT + admin for this tenant
+    //==============================================================================
+    public async Task<AppUser> AddTenantAsync(TenantRegisterDto dto)
     {
-        AppUser user = new AppUser
+        using var transaction = await context.Database.BeginTransactionAsync();
+
+        try
         {
-            UserName = dto.Email,
+            Tenant tenant= new Tenant
+            {
+                Name= dto.CompanyName ,
+                VatNumber=dto.VatNumber,
+                ContactInfo= dto.ContactInfo
+            };
+
+            await context.Tenants.AddAsync(tenant);
+            await context.SaveChangesAsync();
+
+            AppUser user = new AppUser
+            {
+                UserName = dto.Email,
+                Email = dto.Email,
+                DisplayName = dto.DisplayName,
+                IsActive = true,
+                TenantId=tenant.Id,
+                Member = new Member
+                    {
+                        FirstName = dto.FirstName,
+                        LastName = dto.LastName,
+                    }
+            };
+
+            var result = await userManager.CreateAsync(user, dto.Password);
+
+            if(!result.Succeeded)
+            {
+                var errors =result.Errors.Select(e => e.Description);
+                throw new Exception(string.Join(" , ",errors));
+            }
+
+            await userManager.AddToRoleAsync(user,"Admin");
+            
+            // 3. Commit
+            await transaction.CommitAsync();
+            return user;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            throw ex;
+        }
+
+    }
+
+    //==============================================================================
+    //      INVITE MEMBER FROM TENANT
+    //==============================================================================
+
+    // για να εγγραφή ένα νεο μέλος πρέπει πρώτα να το προσκαλέσουμε με ένα invite link που θα στείλουμε στο email του
+    //αυτο το κάνει ο admin του tenant. Ο admin στέλνει ένα invite link στο email του νέου μέλους και το νέο μέλος εγγράφεται με αυτό το link.
+    // -- InviteMemberAsync 
+        // στέλνει το invite link στο email του νέου μέλους και αποθηκεύει το invite στο database.
+        //  Το invite περιέχει ένα token που θα χρησιμοποιηθεί για να εγγραφεί το νέο μέλος.
+    // -- GetInviteInfoAsync
+        // παίρνει το invite token και επιστρέφει τις πληροφορίες του invite (email, first name, last name, tenant name)
+    // -- RegisterFromInviteAsync
+        // παίρνει το invite token και τα στοιχεία του νέου μέλους (display name, password) και δημιουργεί το νέο μέλος στο database. 
+        // Το invite token γίνεται used και δεν μπορεί να χρησιμοποιηθεί ξανά.
+    public async Task InviteMemberAsync(MemberInviteDto dto, Guid tenantId)
+    {
+        var invite = new MemberInvite
+        {
             Email = dto.Email,
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Role = dto.Role,
+            TenantId = tenantId,
+            Token = Guid.NewGuid().ToString("N"),
+            ExpiresAt = DateTime.UtcNow.AddDays(7)
+        };
+
+        await context.MemberInvites.AddAsync(invite);
+        await context.SaveChangesAsync();
+
+        await emailService.SendEmailAsync(
+            dto.Email,
+            "Πρόσκληση εγγραφής",
+            $"Γεια σας,\n Έχετε προσκληθεί να εγγραφείτε στην πλατφόρμα. \n \n   https://localhost:5001/api/account?token={invite.Token}"+
+            "\n Το link λήγει σε 7 ημέρες.");
+
+    }
+
+    public async Task<MemberInviteInfoDto?> GetInviteInfoAsync(string token)
+    {
+        var invite = await context.MemberInvites
+            .Include(x => x.Tenant)
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(x => x.Token == token);
+
+        if (invite == null || invite.IsUsed || invite.ExpiresAt < DateTime.UtcNow)
+            throw new Exception("Invalid invite");
+
+        return new MemberInviteInfoDto
+        {
+            Email = invite.Email,
+            FirstName = invite.FirstName,
+            LastName = invite.LastName,
+            TenantName = invite.Tenant.Name
+        };
+    }
+
+    public async Task<AppUser> RegisterFromInviteAsync(MemberRegisterFromInviteDto dto)
+    {
+        var invite = await context.MemberInvites
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(x => x.Token == dto.Token);
+
+        if (invite == null)
+            throw new Exception("Invalid invite");
+
+        if (invite.IsUsed)
+            throw new Exception("Invite already used");
+
+        if (invite.ExpiresAt < DateTime.UtcNow)
+            throw new Exception("Invite expired");
+        
+        tenantProvider.SetCurrentTenant(invite.TenantId);
+
+        var user = new AppUser
+        {
+            UserName = invite.Email,
+            Email = invite.Email,
             DisplayName = dto.DisplayName,
-            IsActive = true
+            TenantId = invite.TenantId,
+            IsActive = true,
+            Member = new Member
+            {
+                FirstName = invite.FirstName,
+                LastName = invite.LastName
+            }
         };
 
         var result = await userManager.CreateAsync(user, dto.Password);
 
-        if(!result.Succeeded)
-        {
-            var errors =result.Errors.Select(e => e.Description);
-            throw new Exception(string.Join(" , ",errors));
-        }
+        if (!result.Succeeded)
+            throw new Exception(string.Join(", ", result.Errors.Select(x => x.Description)));
 
-        Member member= new Member
-        {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Afm = dto.Afm,
-            Amka = dto.Amka,
-            Id = user.Id
-        };
+        await userManager.AddToRoleAsync(user, invite.Role);
 
-        await context.Members.AddAsync(member);
+        invite.IsUsed = true;
+
+        await context.SaveChangesAsync();
+
+        return await userManager.Users
+            .Include(u => u.Tenant)
+            .Include(u => u.Member)
+            .FirstAsync(u => u.Id == user.Id);
     }
 
-    public async Task<IReadOnlyList<MemberListDto>> GetAllAsync()
-    {
-        var members = await context.Members
-                            .Select(m => new MemberListDto
-                                {
-                                    Id=m.Id,
-                                    FullName= m.LastName+" "+m.FirstName,
-                                    Afm=m.Afm,
-                                    Email=m.User.Email!,
-                                    DisplayName=m.User.DisplayName,
-                                    TentalName = m.User.Tenant.Name,
-                                    TentalId = m.User.TenantId,
-                                    LastActive=m.LastActive,
-                                    IsLockout = m.User.LockoutEnd != null && m.User.LockoutEnd > DateTime.UtcNow
-                                }
-                            ).ToListAsync();
-        return members;
-    }
+
+
+    //-------------------------------------------------------------------------------------------------
 
     public async Task<Member?> GetMemberByIdAsync(string id)
     {
@@ -74,8 +194,17 @@ public class MemberRepositor (AppDbContext context,UserManager<AppUser> userMana
         context.Entry(member).State = EntityState.Modified;
     }
    
-    public async Task<bool> SaveAllAsyng()
+   
+
+    public async Task<IReadOnlyList<Member>> GetAllAsync()
     {
-        return await context.SaveChangesAsync()>0;
+        return await context.Members.Include(m => m.User).IgnoreQueryFilters().ToListAsync();
+    }
+
+    public async Task<Member?> GetMemberByEmailAsync(string email)
+    {
+        return await context.Members.Include(m => m.User)
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(m => m.User.Email == email);
     }
 }

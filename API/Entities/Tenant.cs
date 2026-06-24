@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using static API.Entities.Enums;
 
 namespace API.Entities;
@@ -21,7 +22,9 @@ public class Tenant
     public SubscriptionStatus SubscriptionStatus { get; set; } = SubscriptionStatus.Active;
 
     // Navigation Properties
+    [JsonIgnore]
     public  ICollection<AppUser> Users { get; set; } = new List<AppUser>();
+    [JsonIgnore]
     public  ICollection<Customer> Customers { get; set; } = new List<Customer>();
 }
 

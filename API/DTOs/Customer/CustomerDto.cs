@@ -1,0 +1,55 @@
+using System;
+using API.DTOs.Contacts;
+using static API.Entities.Enums;
+
+namespace API.DTOs.Customer;
+
+public class CustomerDto
+{
+
+    public Guid Id { get; set; }
+    public CustomerType Type { get; set; }
+    public string Name { get; set; } = null!;
+    public string Afm { get; set; } = null!;
+    public string? Dou { get; set; }
+    public string? Phones { get; set; }
+    public string? Email { get; set; }
+    public string? Address { get; set; }
+    public string? Representative { get; set; }
+    public DateTime CreatedAt { get; set; }
+ 
+    public List<ContactDto> Contacts { get; set; } = new();
+}
+
+public class CustomerLookupDto
+{
+
+    public Guid Id { get; set; }
+    public string Name { get; set; } = null!;
+    public string Afm { get; set; } = null!;
+}
+
+public class CustomerCreateDto
+{
+    public CustomerType Type { get; set; }
+    public required string Name { get; set; }
+    public required string Afm { get; set; }
+    public string? Dou { get; set; }
+    public string? Phones { get; set; }
+    public string? Email { get; set; }
+    public string? Address { get; set; }
+    public string? Representative { get; set; }
+
+}
+
+public class CustomerUpdateDto
+{
+    public CustomerType Type { get; set; }
+    public required string Name { get; set; }
+    public required string Afm { get; set; }
+    public string? Dou { get; set; }
+    public string? Phones { get; set; }
+    public string? Email { get; set; }
+    public string? Address { get; set; }
+    public string? Representative { get; set; }
+}

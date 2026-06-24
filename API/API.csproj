@@ -15,6 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Bogus" Version="35.6.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.7" />
@@ -27,9 +28,12 @@
   <ItemGroup>
     <Folder Include="Data\Contexts\" />
     <Folder Include="Data\Migrations\" />
-    <Folder Include="Data\Repositories\" />
+    <Folder Include="DTOs\Asset\" />
+    <Folder Include="DTOs\Contacts\" />
+    <Folder Include="DTOs\Customer\" />
     <Folder Include="Errors\" />
     <Folder Include="Extensions\" />
+    <Folder Include="Helper\" />
     <Folder Include="Middleware\" />
     <Folder Include="Services\" />
   </ItemGroup>

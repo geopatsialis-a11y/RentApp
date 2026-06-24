@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -9,7 +10,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialDb : Migration
+    public partial class ContractAsset : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -135,7 +136,7 @@ namespace API.Data.Migrations
                     AcquisitionCost = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     MonthlyLeaseCost = table.Column<decimal>(type: "numeric(18,2)", nullable: true),
                     Status = table.Column<int>(type: "integer", nullable: false),
-                    PropertiesJson = table.Column<string>(type: "jsonb", nullable: true),
+                    PropertiesJson = table.Column<JsonDocument>(type: "jsonb", nullable: true),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     CreatedBy = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
@@ -419,8 +420,8 @@ namespace API.Data.Migrations
                     Id = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     FirstName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     LastName = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Afm = table.Column<string>(type: "character varying(9)", maxLength: 9, nullable: false),
-                    Amka = table.Column<string>(type: "character varying(11)", maxLength: 11, nullable: false),
+                    Afm = table.Column<string>(type: "character varying(9)", maxLength: 9, nullable: true),
+                    Amka = table.Column<string>(type: "character varying(11)", maxLength: 11, nullable: true),
                     Created = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     LastActive = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
                 },

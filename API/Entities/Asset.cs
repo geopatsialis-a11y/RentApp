@@ -1,6 +1,8 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using static API.Entities.Enums;
 
@@ -30,18 +32,21 @@ public class Asset: BaseEntity
     public AssetStatus Status { get; set; } = AssetStatus.Available;
 
     // Εδώ θα αποθηκεύεται όλο το EAV σε JSON μορφή για να μην κάνεις JOINs στα Views
-    [Column(TypeName = "jsonb")]
-    public string? PropertiesJson { get; set; }
+    public JsonDocument? PropertiesJson { get; set; }
 
     // Navigation Properties
     // 1 asset έχει 1 τύπο, αλλά 1 τύπος μπορεί να έχει πολλά assets
     [ForeignKey(nameof(AssetTypeId))]
+    [JsonIgnore]
     public  AssetType AssetType { get; set; } = null!;
 
     // Ένα asset μπορεί να έχει πολλά attribute values (ένα για κάθε πεδίο του τύπου)
     //πχ ένα asset τύπου "Βιβλίο" μπορεί να έχει ένα attribute value για το πεδίο "ISBN", ένα για το "Αριθμός Σελίδων", κλπ.
+    [JsonIgnore]
     public  ICollection<AssetAttributeValue> AttributeValues { get; set; } = new List<AssetAttributeValue>();
     // Ένα asset μπορεί να έχει πολλά  συμβόλαια ενοικιασησ και ενα συμβολαιο μπορει να έχει πολλά  παγια
+    [JsonIgnore]
     public ICollection<ContractAsset> ContractAssets { get; set; } = new List<ContractAsset>();
+    [JsonIgnore]
     public ICollection<CostAssetHist> MaintenanceHistory { get; set; } = new List<CostAssetHist>();
 }

@@ -121,7 +121,7 @@ public class DbInitializer
         {
             var exists = await context.Users
                 .IgnoreQueryFilters()
-                .AnyAsync(x => x.NormalizedEmail == user.Email.ToUpper());
+                .AnyAsync(x => x.NormalizedEmail == user.Email!.ToUpper());
 
             if (!exists)
             {
@@ -133,6 +133,9 @@ public class DbInitializer
                         result.Errors.Select(x => x.Description)));
                 }
 
+                await userManager.AddToRoleAsync(user, "Admin");
+
+
                 if (user.TenantId == tenantBook)
                     bookUserId = user.Id;
 
@@ -143,6 +146,7 @@ public class DbInitializer
                     warehouseUserId = user.Id;
             }
         }
+
 
         // ==========================================
         // ΔΗΜΙΟΥΡΓΙΑ Members
@@ -216,6 +220,30 @@ public class DbInitializer
         await context.AssetTypeFields.AddRangeAsync(bookFields);
         await context.AssetTypeFields.AddRangeAsync(machineFields);
         await context.AssetTypeFields.AddRangeAsync(warehouseFields);
+        await context.SaveChangesAsync();
+
+        // Δημιουργία ενός Dropdown Field
+        var colorField = new AssetTypeField
+        {
+            Id = Guid.NewGuid(),
+            AssetTypeId = machineType.Id,
+            TenantId = tenantMachine,
+            Name = "color",
+            Label = "Χρώμα",
+            DataType = Enums.FieldDataType.Dropdown,  // ✅
+            IsRequired = true,
+            CreatedBy = machineUserId
+        };
+
+        var colorOptions = new List<AssetTypeFieldOption>
+        {
+            new() { Id = Guid.NewGuid(), AssetTypeFieldId = colorField.Id, TenantId = tenantMachine, Label = "Κόκκινο", Value = "red", DisplayOrder = 1, CreatedBy = machineUserId },
+            new() { Id = Guid.NewGuid(), AssetTypeFieldId = colorField.Id, TenantId = tenantMachine, Label = "Μαύρο", Value = "black", DisplayOrder = 2, CreatedBy = machineUserId },
+            new() { Id = Guid.NewGuid(), AssetTypeFieldId = colorField.Id, TenantId = tenantMachine, Label = "Λευκό", Value = "white", DisplayOrder = 3, CreatedBy = machineUserId }
+        };
+
+        await context.AssetTypeFields.AddAsync(colorField);
+        await context.AssetTypeFieldOptions.AddRangeAsync(colorOptions);
         await context.SaveChangesAsync();
 
 
@@ -302,9 +330,9 @@ public class DbInitializer
         // Λογική δημιουργίας Assets (500 Βιβλία, 1500 Μηχανήματα, 50 Αποθήκες)
         var assetGenerationConfig = new List<(AssetType Type, List<AssetTypeField> Fields, int Count)>
         {
-            (bookType, bookFields, 500),
-            (machineType, machineFields, 1500),
-            (warehouseType, warehouseFields, 50)
+            (bookType, bookFields, 5),
+            (machineType, machineFields, 15),
+            (warehouseType, warehouseFields, 5)
         };
 
         foreach (var config in assetGenerationConfig)
@@ -338,7 +366,7 @@ public class DbInitializer
                     };
 
                     // Γέμισμα δεδομένων βάσει του DataType και του Ονόματος του Πεδίου (για ρεαλισμό)
-                    object jsonValue = null;
+                    object jsonValue = null!;
 
                     if (field.DataType == Enums.FieldDataType.Text)
                     {
@@ -400,7 +428,9 @@ public class DbInitializer
                     Status = Enums.AssetStatus.Available,
                     AcquisitionCost = faker.Random.Decimal(50, 5000),
                     // Κάνουμε Serialize το Dictionary σε JSONB
-                    PropertiesJson = JsonSerializer.Serialize(propertiesDict, new JsonSerializerOptions { WriteIndented = false }),
+                    PropertiesJson = JsonDocument.Parse(
+                                        JsonSerializer.Serialize(propertiesDict)
+                                    ),
                     CreatedBy = config.Type ==bookType ? bookUserId :
                                     config.Type == machineType ? machineUserId :
                                     warehouseUserId,
