@@ -5,8 +5,7 @@ using API.Errors;
 using API.Interfaces;
  
 namespace API.Services;
- 
-// Machine keys must be safe to interpolate into a jsonb ->> operator in raw
+ // Machine keys must be safe to interpolate into a jsonb ->> operator in raw
 // SQL (see AssetRepository.SearchAsync) — restricting them at creation time
 // to lowercase/digits/underscore means there is no further sanitization
 // needed downstream, and it keeps Angular's dynamic form binding predictable.
@@ -170,6 +169,102 @@ public partial class AssetService(IUnitOfWork unitOfWork, ITenantProvider tenant
                 $"Cannot delete field '{field.Label}' — one or more assets already store a value for it.");
  
         unitOfWork.AssetRepository.RemoveField(field);
+        await unitOfWork.Complete();
+    }
+ 
+    // ==================================================================
+    //  ASSET TYPE FIELD OPTION (dropdown choices, e.g. Color -> red/black/white)
+    // ==================================================================
+ 
+    public async Task<AssetTypeFieldOptionDto> AddOptionAsync(
+        Guid assetTypeId, Guid fieldId, AssetTypeFieldOptionCreateDto dto, string currentUserId)
+    {
+        var field = await unitOfWork.AssetRepository.GetFieldEntityByIdAsync(fieldId);
+        if (field == null || field.AssetTypeId != assetTypeId)
+            throw new NotFoundException($"Field '{fieldId}' was not found on this category.");
+ 
+        if (await unitOfWork.AssetRepository.OptionValueExistsAsync(fieldId, dto.Value))
+            throw new BadRequestException($"Option value '{dto.Value}' already exists on this field.");
+ 
+        var option = new AssetTypeFieldOption
+        {
+            TenantId = tenantProvider.TenantId,
+            AssetTypeFieldId = fieldId,
+            Label = dto.Label,
+            Value = dto.Value,
+            DisplayOrder = dto.DisplayOrder,
+            CreatedBy = currentUserId
+        };
+ 
+        await unitOfWork.AssetRepository.AddOptionAsync(option);
+        await unitOfWork.Complete();
+ 
+        return new AssetTypeFieldOptionDto
+        {
+            Id = option.Id,
+            Label = option.Label,
+            Value = option.Value,
+            DisplayOrder = option.DisplayOrder
+        };
+    }
+ 
+    public async Task<AssetTypeFieldOptionDto> UpdateOptionAsync(
+        Guid assetTypeId, Guid fieldId, Guid optionId, AssetTypeFieldOptionUpdateDto dto, string currentUserId)
+    {
+        var field = await unitOfWork.AssetRepository.GetFieldEntityByIdAsync(fieldId);
+        if (field == null || field.AssetTypeId != assetTypeId)
+            throw new NotFoundException($"Field '{fieldId}' was not found on this category.");
+ 
+        var option = await unitOfWork.AssetRepository.GetOptionEntityByIdAsync(optionId);
+        if (option == null || option.AssetTypeFieldId != fieldId)
+            throw new NotFoundException($"Option '{optionId}' was not found on this field.");
+ 
+        if (await unitOfWork.AssetRepository.OptionValueExistsAsync(fieldId, dto.Value, excludingId: optionId))
+            throw new BadRequestException($"Option value '{dto.Value}' already exists on this field.");
+ 
+        // Changing Value (not just Label) would silently orphan any asset that
+        // already stores the OLD value in AssetAttributeValue.StringValue /
+        // PropertiesJson — those assets would keep a value no longer offered
+        // as a choice. Block it the same way DeleteOptionAsync does, unless
+        // the Value is staying the same (a pure label/display-order edit).
+        if (option.Value != dto.Value && await unitOfWork.AssetRepository.OptionValueInUseAsync(fieldId, option.Value))
+            throw new BadRequestException(
+                $"Cannot change value '{option.Value}' — one or more assets already use it. " +
+                "Add a new option instead, or update those assets first.");
+ 
+        option.Label = dto.Label;
+        option.Value = dto.Value;
+        option.DisplayOrder = dto.DisplayOrder;
+        option.UpdatedAt = DateTime.UtcNow;
+        option.UpdatedBy = currentUserId;
+ 
+        unitOfWork.AssetRepository.UpdateOption(option);
+        await unitOfWork.Complete();
+ 
+        return new AssetTypeFieldOptionDto
+        {
+            Id = option.Id,
+            Label = option.Label,
+            Value = option.Value,
+            DisplayOrder = option.DisplayOrder
+        };
+    }
+ 
+    public async Task DeleteOptionAsync(Guid assetTypeId, Guid fieldId, Guid optionId)
+    {
+        var field = await unitOfWork.AssetRepository.GetFieldEntityByIdAsync(fieldId);
+        if (field == null || field.AssetTypeId != assetTypeId)
+            throw new NotFoundException($"Field '{fieldId}' was not found on this category.");
+ 
+        var option = await unitOfWork.AssetRepository.GetOptionEntityByIdAsync(optionId);
+        if (option == null || option.AssetTypeFieldId != fieldId)
+            throw new NotFoundException($"Option '{optionId}' was not found on this field.");
+ 
+        if (await unitOfWork.AssetRepository.OptionValueInUseAsync(fieldId, option.Value))
+            throw new BadRequestException(
+                $"Cannot delete option '{option.Label}' — one or more assets already use it.");
+ 
+        unitOfWork.AssetRepository.RemoveOption(option);
         await unitOfWork.Complete();
     }
  

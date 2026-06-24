@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 
+
 [Authorize]
 public class AssetTypeController(IAssetService assetService) : BaseApiController
 {
@@ -157,6 +158,72 @@ public class AssetTypeController(IAssetService assetService) : BaseApiController
             return BadRequest(new { message = ex.Message });
         }
     }
-}
 
- 
+    // ----------------------------------------------------------------
+    //  Field options (sub-resource of a field) — dropdown choices,
+    //  e.g. for "color": Κόκκινο/red, Μαύρο/black, Λευκό/white
+    // ----------------------------------------------------------------
+
+    // POST api/assettype/{id}/fields/{fieldId}/options
+    [HttpPost("{id:guid}/fields/{fieldId:guid}/options")]
+    public async Task<ActionResult<AssetTypeFieldOptionDto>> AddOption(
+        Guid id, Guid fieldId, AssetTypeFieldOptionCreateDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        try
+        {
+            var option = await assetService.AddOptionAsync(id, fieldId, dto, User.GetMemberId().ToString());
+            return Ok(option);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // PUT api/assettype/{id}/fields/{fieldId}/options/{optionId}
+    [HttpPut("{id:guid}/fields/{fieldId:guid}/options/{optionId:guid}")]
+    public async Task<ActionResult<AssetTypeFieldOptionDto>> UpdateOption(
+        Guid id, Guid fieldId, Guid optionId, AssetTypeFieldOptionUpdateDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        try
+        {
+            var option = await assetService.UpdateOptionAsync(id, fieldId, optionId, dto, User.GetMemberId().ToString());
+            return Ok(option);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // DELETE api/assettype/{id}/fields/{fieldId}/options/{optionId}
+    [HttpDelete("{id:guid}/fields/{fieldId:guid}/options/{optionId:guid}")]
+    public async Task<IActionResult> DeleteOption(Guid id, Guid fieldId, Guid optionId)
+    {
+        try
+        {
+            await assetService.DeleteOptionAsync(id, fieldId, optionId);
+            return NoContent();
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+}

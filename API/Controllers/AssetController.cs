@@ -11,7 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 using static API.Entities.Enums;
 
 namespace API.Controllers;
-   
+
+
 [Authorize]
 public class AssetController(IAssetService assetService) : BaseApiController
 {
@@ -72,6 +73,29 @@ public class AssetController(IAssetService assetService) : BaseApiController
         try
         {
             var updated = await assetService.UpdateAsync(id, dto, User.GetMemberId().ToString());
+            return Ok(updated);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (BadRequestException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    // PATCH api/asset/{id}/attribute
+    // Changes ONE EAV value (e.g. just "color") without resending the
+    // whole Attributes set — unlike PUT above, which replaces all of them.
+    [HttpPatch("{id:guid}/attribute")]
+    public async Task<ActionResult<AssetDto>> UpdateAttribute(Guid id, AssetAttributeUpdateDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        try
+        {
+            var updated = await assetService.UpdateAttributeAsync(id, dto, User.GetMemberId().ToString());
             return Ok(updated);
         }
         catch (NotFoundException ex)
@@ -175,4 +199,5 @@ public class AssetController(IAssetService assetService) : BaseApiController
     }
 }
 
- 
+
+

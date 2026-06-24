@@ -9,7 +9,7 @@ namespace API.Interfaces;
 public interface IAssetRepository
 
 {
-    // ---------------- AssetType (category) ----------------
+        // ---------------- AssetType (category) ----------------
     Task<List<AssetTypeDto>> GetAssetTypesAsync();
     Task<List<AssetTypeLookupDto>> GetAssetTypeLookupAsync();
     Task<AssetTypeDto?> GetAssetTypeByIdAsync(Guid id);
@@ -29,6 +29,14 @@ public interface IAssetRepository
     void RemoveField(AssetTypeField field);
     Task<bool> FieldHasValuesAsync(Guid fieldId);
  
+    // ---------------- AssetTypeFieldOption (dropdown choices) ----------------
+    Task<AssetTypeFieldOption?> GetOptionEntityByIdAsync(Guid optionId);
+    Task<bool> OptionValueExistsAsync(Guid fieldId, string value, Guid? excludingId = null);
+    Task AddOptionAsync(AssetTypeFieldOption option);
+    void UpdateOption(AssetTypeFieldOption option);
+    void RemoveOption(AssetTypeFieldOption option);
+    Task<bool> OptionValueInUseAsync(Guid fieldId, string value);
+ 
     // ---------------- Asset (data) ----------------
     Task<PaginatedResult<AssetDto>> GetAllAsync(PagingParams pagingParams, Guid? assetTypeId, Enums.AssetStatus? status);
     Task<PaginatedResult<AssetDto>> SearchAsync(AssetSearchRequest request);
@@ -42,6 +50,7 @@ public interface IAssetRepository
  
     // ---------------- AssetAttributeValue (EAV values) ----------------
     Task ReplaceAttributeValuesAsync(Asset asset, Dictionary<string, object?> attributes, List<AssetTypeField> schema);
+    Task SetSingleAttributeValueAsync(Asset asset, AssetTypeField field, object? rawValue);
  
     // ---------------- CostAssetHist (maintenance) ----------------
     Task<List<CostAssetHist>> GetMaintenanceHistoryAsync(Guid assetId);

@@ -33,6 +33,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<ITenantProvider, TenantProvider>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
+builder.Services.AddScoped<IAssetService, AssetService>();
 
 
 

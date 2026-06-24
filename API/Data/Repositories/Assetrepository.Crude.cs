@@ -9,6 +9,7 @@ using static API.Entities.Enums;
 namespace API.Data.Repositories;
 
 
+
 public partial class AssetRepository
 {
     // ==================================================================
@@ -153,45 +154,135 @@ public partial class AssetRepository
                 CreatedBy = asset.CreatedBy
             };
  
-            switch (field.DataType)
-            {
-                case FieldDataType.Text:
-                    value.StringValue = rawValue.ToString();
-                    jsonProperties[field.Name] = value.StringValue;
-                    break;
- 
-                case FieldDataType.Number:
-                    if (!decimal.TryParse(rawValue.ToString(), out var num))
-                        throw new BadRequestException($"Field '{field.Label}' must be numeric.");
-                    if (field.MinValue.HasValue && num < field.MinValue)
-                        throw new BadRequestException($"Field '{field.Label}' must be >= {field.MinValue}.");
-                    if (field.MaxValue.HasValue && num > field.MaxValue)
-                        throw new BadRequestException($"Field '{field.Label}' must be <= {field.MaxValue}.");
-                    value.DecimalValue = num;
-                    jsonProperties[field.Name] = num;
-                    break;
- 
-                case FieldDataType.Boolean:
-                    if (!bool.TryParse(rawValue.ToString(), out var boolVal))
-                        throw new BadRequestException($"Field '{field.Label}' must be true/false.");
-                    value.BoolValue = boolVal;
-                    jsonProperties[field.Name] = boolVal;
-                    break;
- 
-                case FieldDataType.Date:
-                case FieldDataType.DateTime:
-                    if (!DateTime.TryParse(rawValue.ToString(), out var dateVal))
-                        throw new BadRequestException($"Field '{field.Label}' must be a valid date.");
-                    value.DateValue = dateVal;
-                    jsonProperties[field.Name] = dateVal.ToString("O");
-                    break;
-            }
+            jsonProperties[field.Name] = CoerceIntoAttributeValue(field, rawValue, value);
  
             await context.AssetAttributeValues.AddAsync(value);
         }
  
         asset.PropertiesJson = JsonSerializer.SerializeToDocument(jsonProperties);
         context.Entry(asset).Property(a => a.PropertiesJson).IsModified = true;
+    }
+ 
+    // ==================================================================
+    //  SINGLE ATTRIBUTE PATCH — change one field's value on an asset
+    //  (e.g. just "color") without touching the rest of its attributes.
+    // ==================================================================
+ 
+    public async Task SetSingleAttributeValueAsync(Asset asset, AssetTypeField field, object? rawValue)
+    {
+        var existing = await context.AssetAttributeValues
+            .FirstOrDefaultAsync(v => v.AssetId == asset.Id && v.AssetTypeFieldId == field.Id);
+ 
+        object? jsonValue = null;
+ 
+        if (rawValue is null)
+        {
+            if (field.IsRequired)
+                throw new BadRequestException($"Field '{field.Label}' is required and cannot be cleared.");
+ 
+            if (existing != null)
+                context.AssetAttributeValues.Remove(existing);
+        }
+        else
+        {
+            var value = existing ?? new AssetAttributeValue
+            {
+                TenantId = asset.TenantId,
+                AssetId = asset.Id,
+                AssetTypeFieldId = field.Id,
+                CreatedBy = asset.CreatedBy
+            };
+ 
+            jsonValue = CoerceIntoAttributeValue(field, rawValue, value);
+ 
+            if (existing == null)
+                await context.AssetAttributeValues.AddAsync(value);
+            else
+                context.Entry(value).State = EntityState.Modified;
+        }
+ 
+        // Keep the PropertiesJson read-cache in sync: load every OTHER
+        // attribute's current value once, then overlay the field we just
+        // changed (or removed) — one query, no re-fetch of what we already
+        // just wrote above.
+        var otherValues = await context.AssetAttributeValues
+            .Include(v => v.AssetTypeField)
+            .Where(v => v.AssetId == asset.Id && v.AssetTypeFieldId != field.Id)
+            .ToListAsync();
+ 
+        var jsonProperties = otherValues.ToDictionary(
+            v => v.AssetTypeField.Name,
+            v => v.AssetTypeField.DataType switch
+            {
+                FieldDataType.Text => (object?)v.StringValue,
+                FieldDataType.Number => v.DecimalValue,
+                FieldDataType.Boolean => v.BoolValue,
+                FieldDataType.Date or FieldDataType.DateTime => v.DateValue?.ToString("O"),
+                _ => null
+            });
+ 
+        if (rawValue is not null)
+            jsonProperties[field.Name] = jsonValue;
+ 
+        asset.PropertiesJson = JsonSerializer.SerializeToDocument(jsonProperties);
+        context.Entry(asset).Property(a => a.PropertiesJson).IsModified = true;
+    }
+ 
+    // Coerces a raw (string/number/bool/JSON-element) value into the right
+    // typed column on an AssetAttributeValue based on the field's DataType,
+    // validating Min/MaxValue along the way. Returns the value in the form
+    // it should appear as in the PropertiesJson cache (so callers building
+    // that cache don't need to know the per-DataType shape themselves).
+    private static object? CoerceIntoAttributeValue(AssetTypeField field, object rawValue, AssetAttributeValue target)
+    {
+        switch (field.DataType)
+        {
+            case FieldDataType.Text:
+                target.StringValue = rawValue.ToString();
+                return target.StringValue;
+ 
+            case FieldDataType.Number:
+                if (!decimal.TryParse(rawValue.ToString(), out var num))
+                    throw new BadRequestException($"Field '{field.Label}' must be numeric.");
+                if (field.MinValue.HasValue && num < field.MinValue)
+                    throw new BadRequestException($"Field '{field.Label}' must be >= {field.MinValue}.");
+                if (field.MaxValue.HasValue && num > field.MaxValue)
+                    throw new BadRequestException($"Field '{field.Label}' must be <= {field.MaxValue}.");
+                target.DecimalValue = num;
+                return num;
+ 
+            case FieldDataType.Boolean:
+                if (!bool.TryParse(rawValue.ToString(), out var boolVal))
+                    throw new BadRequestException($"Field '{field.Label}' must be true/false.");
+                target.BoolValue = boolVal;
+                return boolVal;
+ 
+            case FieldDataType.Date:
+            case FieldDataType.DateTime:
+                if (!DateTime.TryParse(
+                        rawValue.ToString(),
+                        System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None,
+                        out var dateVal))
+                    throw new BadRequestException($"Field '{field.Label}' must be a valid date.");
+ 
+                // Npgsql maps DateTime -> "timestamp with time zone" and refuses
+                // to write any value whose Kind isn't explicitly Utc (Kind=Unspecified
+                // is what DateTime.TryParse produces for a plain "2021-03-15" string,
+                // and Npgsql treats that as ambiguous/unsafe rather than guessing).
+                dateVal = dateVal.Kind switch
+                {
+                    DateTimeKind.Utc => dateVal,
+                    DateTimeKind.Local => dateVal.ToUniversalTime(),
+                    _ => DateTime.SpecifyKind(dateVal, DateTimeKind.Utc)
+                };
+ 
+                target.DateValue = dateVal;
+                return dateVal.ToString("O");
+ 
+            default:
+                return null;
+        }
     }
  
     // ==================================================================

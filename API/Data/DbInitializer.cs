@@ -230,7 +230,7 @@ public class DbInitializer
             TenantId = tenantMachine,
             Name = "color",
             Label = "Χρώμα",
-            DataType = Enums.FieldDataType.Dropdown,  // ✅
+            DataType = Enums.FieldDataType.Text, // Χρησιμοποιούμε Text για Dropdown, οι επιλογές θα είναι σε ξεχωριστό πίνακα
             IsRequired = true,
             CreatedBy = machineUserId
         };

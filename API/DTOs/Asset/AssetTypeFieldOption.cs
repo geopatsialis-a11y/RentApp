@@ -21,3 +21,10 @@ public class AssetTypeFieldOptionCreateDto
     public required string Value { get; set; }
     public int DisplayOrder { get; set; }
 }
+
+public class AssetTypeFieldOptionUpdateDto
+{
+    public required string Label { get; set; }
+    public required string Value { get; set; }
+    public int DisplayOrder { get; set; }
+}

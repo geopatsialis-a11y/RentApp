@@ -21,7 +21,7 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
         return Ok(result);
     }
 
-    // GET api/customer/lookup?search=acme   (autocomplete for Contract creation, etc.)
+    // GET api/customer/lookup?search=acme   (autocomplete for Contract creation in name or afm.)
     [HttpGet("lookup")]
     public async Task<IActionResult> GetLookup([FromQuery] string? search = null)
     {
@@ -55,6 +55,7 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
     }
 
     // PUT api/customer/{id}
+    // για συγγεκριμένο id, ενημερώνει τα στοιχεία του πελάτη με τα δεδομένα που παρέχονται στο dto.
     [HttpPut("{id:guid}")]
     public async Task<ActionResult<CustomerDto>> Update(Guid id, CustomerUpdateDto dto)
     {

@@ -7,6 +7,7 @@ namespace API.Interfaces;
 
 public interface IAssetService
 {
+   
     // ---------------- AssetType (category) management ----------------
     Task<List<AssetTypeDto>> GetAssetTypesAsync();
     Task<List<AssetTypeLookupDto>> GetAssetTypeLookupAsync();
@@ -20,12 +21,18 @@ public interface IAssetService
     Task<AssetTypeFieldDto> UpdateFieldAsync(Guid assetTypeId, Guid fieldId, AssetTypeFieldUpdateDto dto, string currentUserId);
     Task DeleteFieldAsync(Guid assetTypeId, Guid fieldId);
  
+    // ---------------- AssetTypeFieldOption (dropdown choices) management ----------------
+    Task<AssetTypeFieldOptionDto> AddOptionAsync(Guid assetTypeId, Guid fieldId, AssetTypeFieldOptionCreateDto dto, string currentUserId);
+    Task<AssetTypeFieldOptionDto> UpdateOptionAsync(Guid assetTypeId, Guid fieldId, Guid optionId, AssetTypeFieldOptionUpdateDto dto, string currentUserId);
+    Task DeleteOptionAsync(Guid assetTypeId, Guid fieldId, Guid optionId);
+ 
     // ---------------- Asset (data) CRUD ----------------
     Task<PaginatedResult<AssetDto>> GetAllAsync(PagingParams pagingParams, Guid? assetTypeId, AssetStatus? status);
     Task<AssetDto?> GetByIdAsync(Guid id);
     Task<List<AssetLookupDto>> GetLookupAsync(string? search, Guid? assetTypeId);
     Task<AssetDto> CreateAsync(AssetCreateDto dto, string currentUserId);
     Task<AssetDto> UpdateAsync(Guid id, AssetUpdateDto dto, string currentUserId);
+    Task<AssetDto> UpdateAttributeAsync(Guid id, AssetAttributeUpdateDto dto, string currentUserId);
     Task<AssetDto> UpdateStatusAsync(Guid id, AssetStatusUpdateDto dto, string currentUserId);
     Task DeleteAsync(Guid id, string currentUserId);
  

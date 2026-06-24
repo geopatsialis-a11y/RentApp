@@ -82,3 +82,10 @@ public class CostAssetHistCreateDto
     public decimal Cost { get; set; }
     public string? MaintainedBy { get; set; }
 }
+
+public class AssetAttributeUpdateDto
+{
+    // Must match an AssetTypeField.Name on this asset's AssetType.
+    public required string FieldName { get; set; }
+    public object? Value { get; set; }
+}

@@ -158,4 +158,46 @@ public partial class AssetRepository(AppDbContext context,  ITenantProvider tena
     {
         return await context.AssetAttributeValues.AnyAsync(v => v.AssetTypeFieldId == fieldId);
     }
+
+    
+    // ==================================================================
+    //  ASSET TYPE FIELD OPTION — dropdown/select choices for a field
+    // ==================================================================
+ 
+    public async Task<AssetTypeFieldOption?> GetOptionEntityByIdAsync(Guid optionId)
+    {
+        return await context.AssetTypeFieldOptions.FirstOrDefaultAsync(o => o.Id == optionId);
+    }
+ 
+    public async Task<bool> OptionValueExistsAsync(Guid fieldId, string value, Guid? excludingId = null)
+    {
+        return await context.AssetTypeFieldOptions.AnyAsync(o =>
+            o.AssetTypeFieldId == fieldId &&
+            o.Value == value &&
+            (excludingId == null || o.Id != excludingId));
+    }
+ 
+    public async Task AddOptionAsync(AssetTypeFieldOption option)
+    {
+        await context.AssetTypeFieldOptions.AddAsync(option);
+    }
+ 
+    public void UpdateOption(AssetTypeFieldOption option)
+    {
+        context.Entry(option).State = EntityState.Modified;
+    }
+ 
+    public void RemoveOption(AssetTypeFieldOption option)
+    {
+        context.AssetTypeFieldOptions.Remove(option);
+    }
+ 
+    public async Task<bool> OptionValueInUseAsync(Guid fieldId, string value)
+    {
+        // An option's "Value" (e.g. "red") is what actually gets stored in
+        // AssetAttributeValue.StringValue / PropertiesJson — not the option's
+        // Id — so checking usage means matching on that stored string value.
+        return await context.AssetAttributeValues.AnyAsync(v =>
+            v.AssetTypeFieldId == fieldId && v.StringValue == value);
+    }
 }

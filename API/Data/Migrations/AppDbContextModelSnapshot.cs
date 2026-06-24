@@ -187,7 +187,7 @@ namespace API.Data.Migrations
 
                     NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex(new[] { "PropertiesJson" }, "idx_asset_properties_jsonb"), "GIN");
 
-                    b.ToTable("Assets");
+                    b.ToTable("Assets", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.AssetAttributeValue", b =>
@@ -261,7 +261,7 @@ namespace API.Data.Migrations
                     b.HasIndex("AssetId", "AssetTypeFieldId")
                         .IsUnique();
 
-                    b.ToTable("AssetAttributeValues");
+                    b.ToTable("AssetAttributeValues", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.AssetType", b =>
@@ -287,7 +287,7 @@ namespace API.Data.Migrations
                     b.HasIndex("TenantId", "Name")
                         .IsUnique();
 
-                    b.ToTable("AssetTypes");
+                    b.ToTable("AssetTypes", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.AssetTypeField", b =>
@@ -374,7 +374,7 @@ namespace API.Data.Migrations
                     b.HasIndex("TenantId", "AssetTypeId", "Name")
                         .IsUnique();
 
-                    b.ToTable("AssetTypeFields");
+                    b.ToTable("AssetTypeFields", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.AssetTypeFieldOption", b =>
@@ -437,7 +437,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("AssetTypeFieldId");
 
-                    b.ToTable("AssetTypeFieldOptions");
+                    b.ToTable("AssetTypeFieldOptions", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.AuditLog", b =>
@@ -479,7 +479,7 @@ namespace API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.Contact", b =>
@@ -554,7 +554,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("CustomerId");
 
-                    b.ToTable("Contacts");
+                    b.ToTable("Contacts", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.Contract", b =>
@@ -635,7 +635,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Contracts");
+                    b.ToTable("Contracts", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.ContractAsset", b =>
@@ -695,7 +695,7 @@ namespace API.Data.Migrations
                     b.HasIndex("ContractId", "AssetId")
                         .IsUnique();
 
-                    b.ToTable("ContractAssets");
+                    b.ToTable("ContractAssets", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.CostAssetHist", b =>
@@ -760,7 +760,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("AssetId");
 
-                    b.ToTable("CostAssetHists");
+                    b.ToTable("CostAssetHists", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.Customer", b =>
@@ -841,7 +841,7 @@ namespace API.Data.Migrations
                     b.HasIndex("TenantId", "Afm")
                         .IsUnique();
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.FileAttachment", b =>
@@ -911,7 +911,7 @@ namespace API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("FileAttachments");
+                    b.ToTable("FileAttachments", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.Invoice", b =>
@@ -990,7 +990,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Invoices");
+                    b.ToTable("Invoices", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.Member", b =>
@@ -1025,7 +1025,7 @@ namespace API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Members");
+                    b.ToTable("Members", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.MemberInvite", b =>
@@ -1098,7 +1098,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("MemberInvites");
+                    b.ToTable("MemberInvites", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.Payment", b =>
@@ -1166,7 +1166,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("TenantId");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("API.Entities.Tenant", b =>
@@ -1193,7 +1193,7 @@ namespace API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenants", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
