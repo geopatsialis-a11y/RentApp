@@ -35,8 +35,6 @@ public class CustomerService (IUnitOfWork uow, ITenantProvider tenantProvider): 
             Name = dto.Name,
             Afm = dto.Afm,
             Dou = dto.Dou,
-            Phones = dto.Phones,
-            Email = dto.Email,
             Address = dto.Address,
             Representative = dto.Representative,
             CreatedBy = currentUserId
@@ -60,8 +58,6 @@ public class CustomerService (IUnitOfWork uow, ITenantProvider tenantProvider): 
         customer.Name = dto.Name;
         customer.Afm = dto.Afm;
         customer.Dou = dto.Dou;
-        customer.Phones = dto.Phones;
-        customer.Email = dto.Email;
         customer.Address = dto.Address;
         customer.Representative = dto.Representative;
         customer.UpdatedAt = DateTime.UtcNow;
@@ -97,8 +93,7 @@ public class CustomerService (IUnitOfWork uow, ITenantProvider tenantProvider): 
         {
             TenantId = customer.TenantId,
             CustomerId = customerId,
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
+            Name = dto.Name,
             Phone = dto.Phone,
             Email = dto.Email,
             CanUseAsset = dto.CanUseAsset,
@@ -112,8 +107,7 @@ public class CustomerService (IUnitOfWork uow, ITenantProvider tenantProvider): 
         return new ContactDto
         {
             Id = contact.Id,
-            FirstName = contact.FirstName,
-            LastName = contact.LastName,
+            Name = contact.Name,
             Phone = contact.Phone,
             Email = contact.Email,
             CanUseAsset = contact.CanUseAsset,

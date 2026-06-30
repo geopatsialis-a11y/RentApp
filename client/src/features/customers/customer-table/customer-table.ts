@@ -27,7 +27,6 @@ export class CustomerTable {
 
   viewHistory(id: string) { this.router.navigate(['/customer', id]); }
   edit(id: string, e: Event) { e.stopPropagation(); this.router.navigate(['/customer', id, 'edit']); }
-  contact(c: CustomerDto, e: Event) { e.stopPropagation(); window.open(`mailto:${c.email}`); }
   delete(id: string, e: Event) {
     e.stopPropagation();
     if (confirm('Διαγραφή πελάτη;')) {

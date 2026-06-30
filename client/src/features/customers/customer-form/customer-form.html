@@ -31,7 +31,7 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             <!-- Επωνυμία -->
-            <label class="form-control w-full">
+            <label class="form-control w-full md:col-span-2">
               <div class="label pb-1"><span class="label-text font-medium">Επωνυμία / Όνομα <span class="text-error">*</span></span></div>
               <input type="text" formControlName="name" placeholder="π.χ. Γεώργιος Παπαδόπουλος"
                 class="input input-bordered w-full"
@@ -57,21 +57,10 @@
               }
             </label>
 
-            <!-- Email -->
+            <!-- ΔΟΥ -->
             <label class="form-control w-full">
-              <div class="label pb-1"><span class="label-text font-medium">Email</span></div>
-              <input type="email" formControlName="email" placeholder="email@example.com"
-                class="input input-bordered w-full"
-                [class.input-error]="f['email'].invalid && f['email'].touched" />
-              @if (f['email'].invalid && f['email'].touched) {
-                <div class="label pt-1"><span class="label-text-alt text-error">Μη έγκυρο email</span></div>
-              }
-            </label>
-
-            <!-- Πόλη -->
-            <label class="form-control w-full">
-              <div class="label pb-1"><span class="label-text font-medium">Πόλη</span></div>
-              <input type="text" formControlName="city" placeholder="π.χ. Αθήνα"
+               <div class="label pb-1"><span class="label-text font-medium">ΔΟΥ</span></div>
+              <input type="text" formControlName="dou" placeholder="π.χ. Α' Αθηνών"
                 class="input input-bordered w-full" />
             </label>
 
@@ -79,38 +68,7 @@
         </div>
 
         <div class="divider my-0"></div>
-
-        <!-- Section: Τηλέφωνα -->
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="text-sm font-semibold text-base-content/50 uppercase tracking-widest">Τηλέφωνα</h3>
-            <button type="button" class="btn btn-ghost btn-xs gap-1" (click)="addPhone()">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              Προσθήκη
-            </button>
-          </div>
-          <div formArrayName="phones" class="space-y-2">
-            @for (ctrl of phonesArray.controls; track $index) {
-              <div class="flex gap-2">
-                <input type="tel" [formControlName]="$index" placeholder="π.χ. 2101234567"
-                  class="input input-bordered flex-1"
-                  [class.input-error]="ctrl.invalid && ctrl.touched" />
-                @if (phonesArray.length > 1) {
-                  <button type="button" class="btn btn-ghost btn-square text-error" (click)="removePhone($index)">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        </div>
-
-        <div class="divider my-0"></div>
-
+        
         <!-- Section: Επιπλέον Στοιχεία -->
         <div>
           <h3 class="text-sm font-semibold text-base-content/50 uppercase tracking-widest mb-4">Επιπλέον Στοιχεία</h3>
@@ -123,11 +81,11 @@
                 class="input input-bordered w-full" />
             </label>
 
-            <!-- Σημειώσεις -->
+            <!-- Εκπρόσωπος -->
             <label class="form-control w-full">
-              <div class="label pb-1"><span class="label-text font-medium">Σημειώσεις</span></div>
-              <textarea formControlName="notes" rows="3" placeholder="Προαιρετικές σημειώσεις..."
-                class="textarea textarea-bordered w-full resize-none"></textarea>
+            <div class="label pb-1"><span class="label-text font-medium">Εκπρόσωπος</span></div>
+              <input type="text" formControlName="representative" placeholder="π.χ. Νίκος Παπαδόπουλος"
+                class="input input-bordered w-full" />
             </label>
 
           </div>

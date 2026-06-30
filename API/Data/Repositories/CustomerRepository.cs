@@ -26,8 +26,7 @@ public class CustomerRepository (AppDbContext context) : ICustomerRepository
             var term = pagingParams.Search.Trim().ToLower();
             query = query.Where(c =>
                 c.Name.ToLower().Contains(term) ||
-                c.Afm.Contains(term) ||
-                (c.Email != null && c.Email.ToLower().Contains(term)));
+                c.Afm.Contains(term) );
         }
  
         var projected = query.OrderBy(c => c.Name).Select(ProjectToDto());
@@ -135,16 +134,13 @@ public class CustomerRepository (AppDbContext context) : ICustomerRepository
             Name = c.Name,
             Afm = c.Afm,
             Dou = c.Dou,
-            Phones = c.Phones,
-            Email = c.Email,
             Address = c.Address,
             Representative = c.Representative,
             CreatedAt = c.CreatedAt,
             Contacts = c.Contacts.Select(ct => new ContactDto
             {
                 Id = ct.Id,
-                FirstName = ct.FirstName,
-                LastName = ct.LastName,
+                Name = ct.Name,
                 Phone = ct.Phone,
                 Email = ct.Email,
                 CanUseAsset = ct.CanUseAsset,

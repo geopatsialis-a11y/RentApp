@@ -2,6 +2,7 @@ using System;
 using System.Text.Json;
 using API.Data.Contexts;
 using API.Entities;
+using API.Interfaces;
 using Bogus;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -12,8 +13,8 @@ public class DbInitializer
 {
 
     
-    public static async Task InitializeAsync(AppDbContext context, UserManager<AppUser> userManager)
-    {
+    public static async Task InitializeAsync(AppDbContext context, UserManager<AppUser> userManager, ITenantProvider tenantProvider)
+        {
         // 1. Δημιουργία της βάσης αν δεν υπάρχει
         await context.Database.EnsureCreatedAsync();
 
@@ -125,6 +126,7 @@ public class DbInitializer
 
             if (!exists)
             {
+                tenantProvider.SetCurrentTenant(user.TenantId);
                 var result = await userManager.CreateAsync(user, "Password123!");
 
                 if (!result.Succeeded)
@@ -278,8 +280,6 @@ public class DbInitializer
                 .RuleFor(c => c.Afm,
                     f => (900000000 + f.IndexFaker).ToString())
                 .RuleFor(c => c.Dou, f => f.PickRandom(greekDous))
-                .RuleFor(c => c.Phones, f => "210" + f.Random.Replace("#######"))
-                .RuleFor(c => c.Email, (f, c) => f.Internet.Email())
                 .RuleFor(c => c.Address,
                     f => $"{f.Address.StreetName()} {f.Random.Number(1,150)}, {f.PickRandom(greekCities)}")
                 .RuleFor(c => c.CreatedBy, _ => currentUserId)
@@ -307,8 +307,7 @@ public class DbInitializer
                     Id = Guid.NewGuid(),
                     CustomerId = customer.Id,
                     TenantId = customer.TenantId,
-                    FirstName = faker.Name.FirstName(),
-                    LastName = faker.Name.LastName(),
+                    Name = faker.Name.FirstName()+" "+faker.Name.LastName(),
                     Email = faker.Internet.Email(),
                     Phone = faker.Phone.PhoneNumber(),
                     CanUseAsset = faker.Random.Bool(),
@@ -330,9 +329,9 @@ public class DbInitializer
         // Λογική δημιουργίας Assets (500 Βιβλία, 1500 Μηχανήματα, 50 Αποθήκες)
         var assetGenerationConfig = new List<(AssetType Type, List<AssetTypeField> Fields, int Count)>
         {
-            (bookType, bookFields, 5),
-            (machineType, machineFields, 15),
-            (warehouseType, warehouseFields, 5)
+            (bookType, bookFields, 500),
+            (machineType, machineFields, 1500),
+            (warehouseType, warehouseFields, 50)
         };
 
         foreach (var config in assetGenerationConfig)

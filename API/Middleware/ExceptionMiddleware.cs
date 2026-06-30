@@ -26,9 +26,11 @@ IHostEnvironment env)
             context.Response.StatusCode= (int)HttpStatusCode.InternalServerError;//=500 error server
 
             //different response for development and production
-            var response = env.IsDevelopment()
-            ? new ApiException(context.Response.StatusCode,ex.Message,ex.StackTrace)
-            : new ApiException(context.Response.StatusCode,ex.Message,"Internal Server Error");
+             var detail = env.IsDevelopment()
+                ? ex.StackTrace
+                : "Internal Server Error";
+            var message = ex.InnerException?.Message ?? ex.Message;
+            var response = new ApiException(context.Response.StatusCode, message, detail);
 
             //serialize response to json και απο PascalCase που έχω στην C#  -> σε camelCase που θέλει το javascript
             var option = new JsonSerializerOptions

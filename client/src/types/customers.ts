@@ -1,23 +1,30 @@
 export interface CustomerDto {
-  id: string;
-  type?:number;
+   id: string;
   name: string;
   afm: string;
-  Dou?: string;
-  phones: string[];
-  email: string;
+  dou?: string;
   address?: string;
   representative?: string;
+  isActive: boolean;
   createdAt: string;
+  contacts: ContactDto[];
 }
 
 export interface CreateCustomerDto {
   name: string;
   afm: string;
   phones: string[];
-  email: string;
-  address?: string;
-  city?: string;
+  dou?: string;
+  representative?: string;
+}
+
+export interface ContactDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  email?: string;
+  canUseAsset: boolean;
   notes?: string;
 }
 

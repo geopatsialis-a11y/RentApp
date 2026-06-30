@@ -126,12 +126,14 @@ try
     var context = services.GetRequiredService<AppDbContext>();
     // 2. ΠΡΟΣΘΗΚΗ: Παίρνουμε το UserManager! 
     var userManager = services.GetRequiredService<UserManager<AppUser>>();
+    var tenantProvider = services.GetRequiredService<ITenantProvider>();
+
 
     //3.  Για να εφαρμόσει τυχόν pending migrations σαν να τρέχαμε το "dotnet ef database update"
     await context.Database.MigrateAsync(); 
 
     //4. Καλούμε την InitializeAsync περνώντας ΚΑΙ ΤΑ ΔΥΟ ορίσματα
-    await DbInitializer.InitializeAsync(context, userManager);
+    await DbInitializer.InitializeAsync(context, userManager, tenantProvider);
     }
 catch (Exception ex)
 {

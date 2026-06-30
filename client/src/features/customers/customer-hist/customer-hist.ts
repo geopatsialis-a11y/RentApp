@@ -2,7 +2,6 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CustomerDto } from '../../../types/customers';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CustomerService } from '../../../core/services/customer-service';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-customer-hist',

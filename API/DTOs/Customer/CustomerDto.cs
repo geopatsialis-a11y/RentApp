@@ -12,8 +12,6 @@ public class CustomerDto
     public string Name { get; set; } = null!;
     public string Afm { get; set; } = null!;
     public string? Dou { get; set; }
-    public string? Phones { get; set; }
-    public string Email { get; set; }= null!;
     public string? Address { get; set; }
     public string? Representative { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -35,8 +33,6 @@ public class CustomerCreateDto
     public required string Name { get; set; }
     public required string Afm { get; set; }
     public string? Dou { get; set; }
-    public string? Phones { get; set; }
-    public string? Email { get; set; }
     public string? Address { get; set; }
     public string? Representative { get; set; }
 
@@ -48,8 +44,6 @@ public class CustomerUpdateDto
     public required string Name { get; set; }
     public required string Afm { get; set; }
     public string? Dou { get; set; }
-    public string? Phones { get; set; }
-    public string? Email { get; set; }
     public string? Address { get; set; }
     public string? Representative { get; set; }
 }

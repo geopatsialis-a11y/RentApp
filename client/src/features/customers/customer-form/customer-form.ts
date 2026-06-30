@@ -23,13 +23,12 @@ export class CustomerForm implements OnInit {
   form = this.fb.group({
     name:    ['', Validators.required],
     afm:     ['', [Validators.required, Validators.pattern(/^\d{9}$/)]],
-    email:   ['', Validators.email],
-    phones:  this.fb.array([this.fb.control('', Validators.required)]),
-    address: ['']
+    dou:      [''],
+    address: [''],
+    representative: [''],
   });
 
   get f() { return this.form.controls; }
-  get phonesArray() { return this.form.get('phones') as FormArray; }
 
   ngOnInit() {
     const id = this.route.snapshot.paramMap.get('id');
@@ -37,23 +36,22 @@ export class CustomerForm implements OnInit {
       this.isEdit.set(true);
       this.customerId = id;
       this.service.getById(id).subscribe(c => {
-        this.form.patchValue({ name: c.name, afm: c.afm, email: c.email, address: c.address });
-        this.phonesArray.clear();
-        c.phones.forEach(p => this.phonesArray.push(this.fb.control(p, Validators.required)));
+         this.form.patchValue({
+          name: c.name,
+          afm: c.afm,
+          dou: c.dou ?? '',
+          address: c.address ?? '',
+          representative: c.representative ?? '',
+        });
       });
     }
   }
-
-  addPhone() { this.phonesArray.push(this.fb.control('', Validators.required)); }
-  removePhone(i: number) { if (this.phonesArray.length > 1) this.phonesArray.removeAt(i); }
-
-  ctrl(c: AbstractControl) { return c as import('@angular/forms').FormControl; }
 
   onSubmit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true);
     this.errorMessage.set('');
-    const dto = { ...this.form.value, phones: this.phonesArray.value } as any;
+    const dto = this.form.value as any;
     const req = this.isEdit()
       ? this.service.update(this.customerId!, dto)
       : this.service.create(dto);
