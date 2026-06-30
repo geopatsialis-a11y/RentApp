@@ -24,8 +24,8 @@ export class CustomerList implements OnInit {
   private searchTimer?: ReturnType<typeof setTimeout>;
 
   ngOnInit() {
-    const saved = localStorage.getItem('customerFilters');
-    if (saved) this.params = { ...this.params, ...JSON.parse(saved) };
+    // const saved = localStorage.getItem('customerFilters');
+    // if (saved) this.params = { ...this.params, ...JSON.parse(saved) };
     this.loadStats();
     this.load();
   }

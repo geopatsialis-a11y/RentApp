@@ -20,8 +20,7 @@ export interface CreateCustomerDto {
 
 export interface ContactDto {
   id: string;
-  firstName: string;
-  lastName: string;
+  name: string;
   phone?: string;
   email?: string;
   canUseAsset: boolean;

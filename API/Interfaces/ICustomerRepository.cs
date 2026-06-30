@@ -22,7 +22,8 @@ public interface ICustomerRepository
  
     // Contacts (sub-resource)
     Task AddContactAsync(Contact contact);
-    Task<Contact?> GetContactEntityByIdAsync(Guid contactId);
+    Task<Contact?> GetContactEntityByIdAsync(Guid contactId); 
+    void UpdateContact(Contact contact);
     void RemoveContact(Contact contact);
-    Task<CustomerStatsDto> GetCustomerStatsAsync();
+    Task<CustomerStatsDto> GetCustomerStatsAsync(Guid tenantId);
 }

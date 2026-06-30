@@ -126,9 +126,36 @@ public class CustomerService (IUnitOfWork uow, ITenantProvider tenantProvider): 
         await uow.Complete();
     }
 
-    public async Task<CustomerStatsDto> GetCustomerStatsAsync()
+    public async Task<CustomerStatsDto> GetCustomerStatsAsync(Guid tenantId)
     {
-        return await uow.CustomerRepository.GetCustomerStatsAsync();
+        return await uow.CustomerRepository.GetCustomerStatsAsync(tenantId);
+    }
+
+     public async Task<ContactDto> UpdateContactAsync(Guid customerId, Guid contactId, ContactCreateDto dto, string currentUserId)
+    {
+        var contact = await uow.CustomerRepository.GetContactEntityByIdAsync(contactId);
+
+        if (contact == null || contact.CustomerId != customerId)
+            throw new NotFoundException($"Contact '{contactId}' was not found for this customer.");
+
+        contact.Name = dto.Name;
+        contact.Phone = dto.Phone;
+        contact.Email = dto.Email;
+        contact.CanUseAsset = dto.CanUseAsset;
+        contact.Notes = dto.Notes;
+
+        uow.CustomerRepository.UpdateContact(contact);
+        await uow.Complete();
+
+        return new ContactDto
+        {
+            Id = contact.Id,
+            Name = contact.Name,
+            Phone = contact.Phone,
+            Email = contact.Email,
+            CanUseAsset = contact.CanUseAsset,
+            Notes = contact.Notes
+        };
     }
 }
 

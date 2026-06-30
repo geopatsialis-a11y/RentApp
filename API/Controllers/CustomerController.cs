@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API.Controllers;
 
- [Authorize]
+[Authorize]
 public class CustomerController(ICustomerService customerService) : BaseApiController
 {
     // GET api/customer?page=1&pageSize=20&search=acme
@@ -48,10 +48,8 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
             var created = await customerService.CreateAsync(dto, User.GetMemberId().ToString());
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
-        catch (BadRequestException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        catch (BadRequestException ex) { return BadRequest(new { message = ex.Message }); }
+
     }
 
     // PUT api/customer/{id}
@@ -66,14 +64,8 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
             var updated = await customerService.UpdateAsync(id, dto, User.GetMemberId().ToString());
             return Ok(updated);
         }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (BadRequestException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (BadRequestException ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     // DELETE api/customer/{id}   (soft delete)
@@ -85,14 +77,8 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
             await customerService.DeleteAsync(id, User.GetMemberId().ToString());
             return NoContent();
         }
-        catch (NotFoundException ex)
-        {
-            return NotFound(new { message = ex.Message });
-        }
-        catch (BadRequestException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (BadRequestException ex) { return BadRequest(new { message = ex.Message }); }
     }
 
     // POST api/customer/{id}/contacts
@@ -112,6 +98,25 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
         }
     }
 
+    // PUT api/customer/{id}/contacts/{contactId}
+    [HttpPut("{id:guid}/contacts/{contactId:guid}")]
+    public async Task<ActionResult<ContactDto>> UpdateContact(Guid id, Guid contactId, ContactCreateDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        try
+        {
+            var contact = await customerService.UpdateContactAsync(id, contactId, dto, User.GetMemberId().ToString());
+            return Ok(contact);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+
+   
     // DELETE api/customer/{id}/contacts/{contactId}
     [HttpDelete("{id:guid}/contacts/{contactId:guid}")]
     public async Task<IActionResult> RemoveContact(Guid id, Guid contactId)
@@ -131,7 +136,7 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
     [HttpGet("stats")]
     public async Task<ActionResult<CustomerStatsDto>> GetStats()
     {
-        var stats = await customerService.GetCustomerStatsAsync();
+        var stats = await customerService.GetCustomerStatsAsync(User.GetTenantId()); 
         return Ok(stats);
     }
 }

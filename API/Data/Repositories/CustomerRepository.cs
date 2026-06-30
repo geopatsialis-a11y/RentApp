@@ -19,14 +19,20 @@ public class CustomerRepository (AppDbContext context) : ICustomerRepository
  
     public async Task<PaginatedResult<CustomerDto>> GetAllAsync(PagingParams pagingParams)
     {
-        var query = context.Customers.AsNoTracking().AsQueryable();
+        var query = context.Customers
+                    .Include(c => c.Contacts)
+                    .AsNoTracking().AsQueryable();
  
         if (!string.IsNullOrWhiteSpace(pagingParams.Search))
         {
             var term = pagingParams.Search.Trim().ToLower();
             query = query.Where(c =>
                 c.Name.ToLower().Contains(term) ||
-                c.Afm.Contains(term) );
+                c.Afm.Contains(term) ||
+                c.Contacts.Any(ct =>
+                    (ct.Phone != null && ct.Phone.Contains(term)) ||
+                    (ct.Email != null && ct.Email.ToLower().Contains(term))
+                    ));
         }
  
         var projected = query.OrderBy(c => c.Name).Select(ProjectToDto());
@@ -149,9 +155,12 @@ public class CustomerRepository (AppDbContext context) : ICustomerRepository
         };
     }
 
-    public async Task<CustomerStatsDto> GetCustomerStatsAsync()
+    public async Task<CustomerStatsDto> GetCustomerStatsAsync(Guid tenantId)
     {
         return await context.Customers
+            .AsNoTracking()
+            .IgnoreQueryFilters() // To include soft-deleted customers in the stats
+            .Where(c => c.TenantId == tenantId)
             .GroupBy(c => c.TenantId) // Grouping by a constant to get aggregate stats
             .Select(g => new CustomerStatsDto
             {
@@ -162,4 +171,10 @@ public class CustomerRepository (AppDbContext context) : ICustomerRepository
             })
             .FirstOrDefaultAsync() ?? new CustomerStatsDto();
     }
+
+     public void UpdateContact(Contact contact)
+    {
+        context.Entry(contact).State = EntityState.Modified;
+    }
+
 }

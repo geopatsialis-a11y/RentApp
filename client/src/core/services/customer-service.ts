@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { CreateCustomerDto, CustomerDto, CustomerStatsDto } from '../../types/customers';
+import { ContactDto, CreateCustomerDto, CustomerDto, CustomerStatsDto } from '../../types/customers';
 import { CustomersParams, PaginatedResult } from '../../types/pagination';
 import { tap } from 'rxjs';
 
@@ -18,7 +18,7 @@ export class CustomerService {
     params = params.append('pageSize', customersParams.pageSize);
     params = params.append('orderBy', customersParams.orderBy);
     if (customersParams.searchTerm) {
-      params = params.append('searchTerm', customersParams.searchTerm);
+      params = params.append('search', customersParams.searchTerm);
     }
 
     return this.http.get<PaginatedResult<CustomerDto>>(this.baseUrl+"customer", { params }).pipe(
@@ -34,4 +34,15 @@ export class CustomerService {
   create(dto: CreateCustomerDto) { return this.http.post<CustomerDto>(`${this.baseUrl}customer/`, dto); }
   update(id: string, dto: CreateCustomerDto) { return this.http.put<CustomerDto>(`${this.baseUrl}customer/${id}`, dto); }
   delete(id: string) { return this.http.delete(`${this.baseUrl}customer/${id}`); }
+
+  
+  addContact(customerId: string, dto: object) {
+    return this.http.post<ContactDto>(`${this.baseUrl}customer/${customerId}/contacts`, dto);
+  }
+  updateContact(customerId: string, contactId: string, dto: object) {
+    return this.http.put<ContactDto>(`${this.baseUrl}customer/${customerId}/contacts/${contactId}`, dto);
+  }
+  deleteContact(customerId: string, contactId: string) {
+    return this.http.delete(`${this.baseUrl}customer/${customerId}/contacts/${contactId}`);
+  }
 }

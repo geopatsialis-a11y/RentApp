@@ -21,6 +21,8 @@
           <th>Επωνυμία</th>
           <th>ΑΦΜ</th>
           <th>Διεύθυνση</th>
+          <th>Τηλέφωνο</th>
+          <th>Email</th>
           <th>Εγγραφή</th>
           <th></th>
         </tr>
@@ -47,11 +49,12 @@
                   <p class="font-medium leading-tight">{{ c.name }}</p>
                 </div>
               </div>
-            </td>
-
-          
+            </td>          
             <td class="font-mono text-sm">{{ c.afm }}</td>
             <td class="text-sm text-base-content/70">{{ c.address || '—' }}</td>
+            <td class="text-sm">{{ c.contacts[0]?.phone || '—' }}</td>
+            <td class="text-sm">{{ c.contacts[0]?.email || '—' }}</td>
+            
             <td class="text-sm text-base-content/60 whitespace-nowrap">{{ c.createdAt | date:'dd/MM/yyyy' }}</td>
             <td>
               <div class="flex items-center gap-1" (click)="$event.stopPropagation()">
