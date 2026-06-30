@@ -102,11 +102,16 @@ public class MemberRepository (
         await context.MemberInvites.AddAsync(invite);
         await context.SaveChangesAsync();
 
+        var registerLink = $"https://localhost:4200/register-invite?token={invite.Token}";
+
+
         await emailService.SendEmailAsync(
             dto.Email,
             "Πρόσκληση εγγραφής",
-            $"Γεια σας,\n Έχετε προσκληθεί να εγγραφείτε στην πλατφόρμα. \n \n   https://localhost:5001/api/account?token={invite.Token}"+
-            "\n Το link λήγει σε 7 ημέρες.");
+            $"Γεια σας {dto.FirstName},\n\nΈχετε προσκληθεί να εγγραφείτε στην πλατφόρμα.\n\n" +
+            $"Κάντε κλικ στον παρακάτω σύνδεσμο για να ολοκληρώσετε την εγγραφή σας:\n\n" +
+            $"{registerLink}\n\n" +
+            $"Το link λήγει σε 7 ημέρες.");
 
     }
 
