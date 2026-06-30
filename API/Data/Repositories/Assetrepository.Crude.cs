@@ -45,7 +45,7 @@ public partial class AssetRepository
         var totalCount = await countQuery.CountAsync();
  
         var pageEntities = await ordered
-            .Skip((pagingParams.Page - 1) * pagingParams.PageSize)
+            .Skip((pagingParams.PageNumber - 1) * pagingParams.PageSize)
             .Take(pagingParams.PageSize)
             .ToListAsync();
  
@@ -56,7 +56,7 @@ public partial class AssetRepository
             Items = items,
             Metadata = new PaginationMetadata
             {
-                CurrentPage = pagingParams.Page,
+                CurrentPage = pagingParams.PageNumber,
                 PageSize = pagingParams.PageSize,
                 TotalCount = totalCount,
                 TotalPages = (int)Math.Ceiling(totalCount / (double)pagingParams.PageSize)

@@ -6,8 +6,13 @@ import { InviteMember } from '../features/user/invite-member/invite-member';
 import { Home } from '../home/home/home';
 import { LandingPage } from '../home/landing-page/landing-page';
 import { guestGuard } from '../core/guards/guest-guard';
+import { CustomerList } from '../features/customers/customer-list/customer-list';
+import { CustomerForm } from '../features/customers/customer-form/customer-form';
+import { ServerError } from '../shared/errors/server-error/server-error';
+import { NotFound } from '../shared/errors/not-found/not-found';
 
 export const routes: Routes = [
+  {path: '',component: LandingPage,canActivate: [guestGuard],runGuardsAndResolvers: 'always'},
  {
     path: '',
     runGuardsAndResolvers: 'always',
@@ -31,6 +36,7 @@ export const routes: Routes = [
   // αφου εχει κανει login
    {
     path: '',
+    component: Home,
     runGuardsAndResolvers: 'always',
     canActivate: [authGuard],
     children: [
@@ -38,8 +44,13 @@ export const routes: Routes = [
         path: 'home',
         component: Home
       },
-      { path: 'InviteMember',  component: InviteMember}
+      { path: 'InviteMember',  component: InviteMember},
+      { path: 'customer', component: CustomerList },
+      { path: 'customer/new', component: CustomerForm },
+      { path: 'customer/:id/edit', component: CustomerForm },
+      { path: 'customer/:id', component: CustomerList },
     ]
    }, 
-  { path: '**', redirectTo: '' }
+  {path:'server-error',component:ServerError},
+  {path:'**',component:NotFound}
 ];

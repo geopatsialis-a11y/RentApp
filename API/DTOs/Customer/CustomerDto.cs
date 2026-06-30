@@ -13,7 +13,7 @@ public class CustomerDto
     public string Afm { get; set; } = null!;
     public string? Dou { get; set; }
     public string? Phones { get; set; }
-    public string? Email { get; set; }
+    public string Email { get; set; }= null!;
     public string? Address { get; set; }
     public string? Representative { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -52,4 +52,12 @@ public class CustomerUpdateDto
     public string? Email { get; set; }
     public string? Address { get; set; }
     public string? Representative { get; set; }
+}
+
+public class CustomerStatsDto
+{
+    public int Total { get; set; }
+    public int Active { get; set; }  
+    public int Inactive { get; set; }
+    public int NewThisMonth { get; set; }
 }

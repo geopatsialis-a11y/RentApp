@@ -1,0 +1,37 @@
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
+import { CreateCustomerDto, CustomerDto, CustomerStatsDto } from '../../types/customers';
+import { CustomersParams, PaginatedResult } from '../../types/pagination';
+import { tap } from 'rxjs';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class CustomerService {
+  private http = inject(HttpClient);
+  private baseUrl = environment.apiUrl;
+
+  getCustomers(customersParams: CustomersParams) {
+    let params = new HttpParams();
+    params = params.append('pageNumber', customersParams.pageNumber);
+    params = params.append('pageSize', customersParams.pageSize);
+    params = params.append('orderBy', customersParams.orderBy);
+    if (customersParams.searchTerm) {
+      params = params.append('searchTerm', customersParams.searchTerm);
+    }
+
+    return this.http.get<PaginatedResult<CustomerDto>>(this.baseUrl+"customer", { params }).pipe(
+      tap(() => {
+        localStorage.setItem('customerFilters', JSON.stringify(customersParams));
+      })
+    );
+  }
+
+  getStats() { return this.http.get<CustomerStatsDto>(`${this.baseUrl}customer/stats`); }
+
+  getById(id: string) { return this.http.get<CustomerDto>(`${this.baseUrl}customer/${id}`); }
+  create(dto: CreateCustomerDto) { return this.http.post<CustomerDto>(`${this.baseUrl}customer/`, dto); }
+  update(id: string, dto: CreateCustomerDto) { return this.http.put<CustomerDto>(`${this.baseUrl}customer/${id}`, dto); }
+  delete(id: string) { return this.http.delete(`${this.baseUrl}customer/${id}`); }
+}

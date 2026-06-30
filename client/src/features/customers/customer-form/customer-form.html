@@ -1,0 +1,149 @@
+<div class="max-w-3xl mx-auto space-y-5">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3">
+    <a routerLink="/customer" class="btn btn-ghost btn-sm btn-square">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+      </svg>
+    </a>
+    <div>
+      <h1 class="text-2xl font-bold">{{ isEdit() ? 'Επεξεργασία Πελάτη' : 'Νέος Πελάτης' }}</h1>
+      <p class="text-sm text-base-content/60 mt-0.5">{{ isEdit() ? 'Ενημερώστε τα στοιχεία πελάτη' : 'Συμπληρώστε τα στοιχεία νέου πελάτη' }}</p>
+    </div>
+  </div>
+
+  <!-- Form card -->
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-6">
+
+      @if (errorMessage()) {
+        <div role="alert" class="alert alert-error mb-4">
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6">
+
+        <!-- Section: Βασικά Στοιχεία -->
+        <div>
+          <h3 class="text-sm font-semibold text-base-content/50 uppercase tracking-widest mb-4">Βασικά Στοιχεία</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <!-- Επωνυμία -->
+            <label class="form-control w-full">
+              <div class="label pb-1"><span class="label-text font-medium">Επωνυμία / Όνομα <span class="text-error">*</span></span></div>
+              <input type="text" formControlName="name" placeholder="π.χ. Γεώργιος Παπαδόπουλος"
+                class="input input-bordered w-full"
+                [class.input-error]="f['name'].invalid && f['name'].touched" />
+              @if (f['name'].invalid && f['name'].touched) {
+                <div class="label pt-1"><span class="label-text-alt text-error">Υποχρεωτικό πεδίο</span></div>
+              }
+            </label>
+
+            <!-- ΑΦΜ -->
+            <label class="form-control w-full">
+              <div class="label pb-1"><span class="label-text font-medium">ΑΦΜ <span class="text-error">*</span></span></div>
+              <input type="text" formControlName="afm" placeholder="123456789" maxlength="9"
+                class="input input-bordered w-full font-mono"
+                [class.input-error]="f['afm'].invalid && f['afm'].touched" />
+              @if (f['afm'].invalid && f['afm'].touched) {
+                <div class="label pt-1">
+                  <span class="label-text-alt text-error">
+                    @if (f['afm'].errors?.['required']) { Υποχρεωτικό πεδίο }
+                    @else { Το ΑΦΜ πρέπει να αποτελείται από 9 ψηφία }
+                  </span>
+                </div>
+              }
+            </label>
+
+            <!-- Email -->
+            <label class="form-control w-full">
+              <div class="label pb-1"><span class="label-text font-medium">Email</span></div>
+              <input type="email" formControlName="email" placeholder="email@example.com"
+                class="input input-bordered w-full"
+                [class.input-error]="f['email'].invalid && f['email'].touched" />
+              @if (f['email'].invalid && f['email'].touched) {
+                <div class="label pt-1"><span class="label-text-alt text-error">Μη έγκυρο email</span></div>
+              }
+            </label>
+
+            <!-- Πόλη -->
+            <label class="form-control w-full">
+              <div class="label pb-1"><span class="label-text font-medium">Πόλη</span></div>
+              <input type="text" formControlName="city" placeholder="π.χ. Αθήνα"
+                class="input input-bordered w-full" />
+            </label>
+
+          </div>
+        </div>
+
+        <div class="divider my-0"></div>
+
+        <!-- Section: Τηλέφωνα -->
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-base-content/50 uppercase tracking-widest">Τηλέφωνα</h3>
+            <button type="button" class="btn btn-ghost btn-xs gap-1" (click)="addPhone()">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Προσθήκη
+            </button>
+          </div>
+          <div formArrayName="phones" class="space-y-2">
+            @for (ctrl of phonesArray.controls; track $index) {
+              <div class="flex gap-2">
+                <input type="tel" [formControlName]="$index" placeholder="π.χ. 2101234567"
+                  class="input input-bordered flex-1"
+                  [class.input-error]="ctrl.invalid && ctrl.touched" />
+                @if (phonesArray.length > 1) {
+                  <button type="button" class="btn btn-ghost btn-square text-error" (click)="removePhone($index)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="divider my-0"></div>
+
+        <!-- Section: Επιπλέον Στοιχεία -->
+        <div>
+          <h3 class="text-sm font-semibold text-base-content/50 uppercase tracking-widest mb-4">Επιπλέον Στοιχεία</h3>
+          <div class="space-y-4">
+
+            <!-- Διεύθυνση -->
+            <label class="form-control w-full">
+              <div class="label pb-1"><span class="label-text font-medium">Διεύθυνση</span></div>
+              <input type="text" formControlName="address" placeholder="π.χ. Λεωφ. Αθηνών 100, Τ.Κ. 10441"
+                class="input input-bordered w-full" />
+            </label>
+
+            <!-- Σημειώσεις -->
+            <label class="form-control w-full">
+              <div class="label pb-1"><span class="label-text font-medium">Σημειώσεις</span></div>
+              <textarea formControlName="notes" rows="3" placeholder="Προαιρετικές σημειώσεις..."
+                class="textarea textarea-bordered w-full resize-none"></textarea>
+            </label>
+
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3 justify-end pt-2">
+          <a routerLink="/customer" class="btn btn-ghost">Ακύρωση</a>
+          <button type="submit" class="btn btn-primary gap-2" [disabled]="loading()">
+            @if (loading()) { <span class="loading loading-spinner loading-sm"></span> }
+            {{ isEdit() ? 'Αποθήκευση' : 'Δημιουργία Πελάτη' }}
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>

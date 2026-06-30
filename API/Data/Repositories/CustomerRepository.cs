@@ -32,7 +32,7 @@ public class CustomerRepository (AppDbContext context) : ICustomerRepository
  
         var projected = query.OrderBy(c => c.Name).Select(ProjectToDto());
  
-        return await PaginationHelper.CreateAsync(projected, pagingParams.Page, pagingParams.PageSize);
+        return await PaginationHelper.CreateAsync(projected, pagingParams.PageNumber, pagingParams.PageSize);
     }
  
     public async Task<CustomerDto?> GetByIdAsync(Guid id)
@@ -151,5 +151,19 @@ public class CustomerRepository (AppDbContext context) : ICustomerRepository
                 Notes = ct.Notes
             }).ToList()
         };
+    }
+
+    public async Task<CustomerStatsDto> GetCustomerStatsAsync()
+    {
+        return await context.Customers
+            .GroupBy(c => c.TenantId) // Grouping by a constant to get aggregate stats
+            .Select(g => new CustomerStatsDto
+            {
+                Total = g.Count(),
+                Active = g.Count(c => !c.IsDeleted),
+                Inactive = g.Count(c => c.IsDeleted),
+                NewThisMonth = g.Count(c => c.CreatedAt >= DateTime.UtcNow.AddMonths(-1))
+            })
+            .FirstOrDefaultAsync() ?? new CustomerStatsDto();
     }
 }

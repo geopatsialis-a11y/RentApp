@@ -34,6 +34,8 @@ public class MemberRepository (
             await context.Tenants.AddAsync(tenant);
             await context.SaveChangesAsync();
 
+            tenantProvider.SetCurrentTenant(tenant.Id);
+
             AppUser user = new AppUser
             {
                 UserName = dto.Email,

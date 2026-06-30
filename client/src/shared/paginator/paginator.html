@@ -1,0 +1,44 @@
+<div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
+
+  <!-- Items per page -->
+  <div class="flex items-center justify-center sm:justify-start gap-2">
+    <span class="text-sm text-base-content/60 whitespace-nowrap">Ανά σελίδα:</span>
+    <select class="select select-sm select-bordered w-[4.5rem]"
+            (change)="onPageChange(undefined, $event.target)">
+      @for (item of selectPage; track $index) {
+        <option [value]="item" [selected]="item === pageSize()">{{ item }}</option>
+      }
+    </select>
+  </div>
+
+  <!-- Range info -->
+  <div class="text-sm text-base-content/60 text-center order-first sm:order-none">
+    <span class="font-medium text-base-content">{{ firstItemIndex() }}–{{ lastItemIndex() }}</span>
+    <span> από </span>
+    <span class="font-medium text-base-content">{{ totalCount() }}</span>
+  </div>
+
+  <!-- Controls -->
+  <div class="flex items-center justify-center sm:justify-end gap-1">
+    <button type="button" class="btn btn-sm btn-circle btn-ghost"
+            [disabled]="pageNumber() === 1"
+            (click)="onPageChange(pageNumber() - 1)" aria-label="Προηγούμενη">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+      </svg>
+    </button>
+
+    <span class="text-sm px-2 tabular-nums select-none whitespace-nowrap">
+      {{ pageNumber() }} / {{ totalPages() }}
+    </span>
+
+    <button type="button" class="btn btn-sm btn-circle btn-ghost"
+            [disabled]="pageNumber() === totalPages() || totalPages() === 0"
+            (click)="onPageChange(pageNumber() + 1)" aria-label="Επόμενη">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+      </svg>
+    </button>
+  </div>
+
+</div>

@@ -28,9 +28,7 @@ namespace API.Controllers
             try
             {
                 var user = await uow.MemberRepository.AddTenantAsync(dto);
-
-                await userManager.AddToRoleAsync(user, "Admin");
-                
+               
                 await SetRefreshTokenCookie(user);  
 
                 return await user.ToDto(tokenService);

@@ -24,5 +24,5 @@ public interface ICustomerRepository
     Task AddContactAsync(Contact contact);
     Task<Contact?> GetContactEntityByIdAsync(Guid contactId);
     void RemoveContact(Contact contact);
- 
+    Task<CustomerStatsDto> GetCustomerStatsAsync();
 }

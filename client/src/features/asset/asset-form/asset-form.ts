@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AssetType, FieldDataType } from '../../../types/Rent';
+import { AssetType, FieldDataType } from '../../../types/rent';
 
 @Component({
   selector: 'app-asset-form',

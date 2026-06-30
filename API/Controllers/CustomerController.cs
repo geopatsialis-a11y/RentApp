@@ -126,4 +126,12 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
             return NotFound(new { message = ex.Message });
         }
     }
+
+    // GET api/customer/stats
+    [HttpGet("stats")]
+    public async Task<ActionResult<CustomerStatsDto>> GetStats()
+    {
+        var stats = await customerService.GetCustomerStatsAsync();
+        return Ok(stats);
+    }
 }

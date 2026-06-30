@@ -1,0 +1,15 @@
+.app-sidebar {
+  transition: transform 250ms ease-in-out;
+}
+
+.sidebar-closed {
+  transform: translateX(-100%);
+}
+
+.sidebar-overlay {
+  transition: opacity 250ms ease-in-out;
+}
+
+.app-sidebar:not(.sidebar-closed) {
+  transform: translateX(0);
+}

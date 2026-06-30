@@ -10,6 +10,10 @@ public class TenantRegisterDto
      public required string CompanyName { get; set; } 
     
     [MaxLength(20, ErrorMessage = "Μέγιστο 20 χαρακτήρες")]
+    [StringLength(9, MinimumLength = 9,
+        ErrorMessage = "Το ΑΦΜ πρέπει να είναι 9 ψηφία")]
+    [RegularExpression(@"^\d{9}$",
+        ErrorMessage = "Το ΑΦΜ πρέπει να περιέχει μόνο αριθμούς")]
     public string? VatNumber { get; set; } // ΑΦΜ
     
     [MaxLength(500)]

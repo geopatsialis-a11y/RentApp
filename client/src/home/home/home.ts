@@ -1,9 +1,10 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AccountService } from '../../core/services/account-service';
+import { Nav } from "../../layout/nav/nav";
 
 @Component({
   selector: 'app-home',
-  imports: [],
+  imports: [Nav],
   templateUrl: './home.html',
   styleUrl: './home.css',
 })

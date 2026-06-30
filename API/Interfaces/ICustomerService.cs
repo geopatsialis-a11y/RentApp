@@ -17,4 +17,5 @@ public interface ICustomerService
  
     Task<ContactDto> AddContactAsync(Guid customerId, ContactCreateDto dto, string currentUserId);
     Task RemoveContactAsync(Guid customerId, Guid contactId);
+    Task<CustomerStatsDto> GetCustomerStatsAsync();
 }

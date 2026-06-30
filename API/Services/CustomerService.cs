@@ -131,5 +131,10 @@ public class CustomerService (IUnitOfWork uow, ITenantProvider tenantProvider): 
         uow.CustomerRepository.RemoveContact(contact);
         await uow.Complete();
     }
+
+    public async Task<CustomerStatsDto> GetCustomerStatsAsync()
+    {
+        return await uow.CustomerRepository.GetCustomerStatsAsync();
+    }
 }
 
