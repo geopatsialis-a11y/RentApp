@@ -77,39 +77,32 @@
 
         <div class="divider my-0"></div>
 
-        <!-- Section: Στοιχεία Απόκτησης -->
+        <!-- Section: Τιμολόγηση -->
         <div>
-          <h3 class="text-sm font-semibold text-base-content/50 uppercase tracking-widest mb-4">Στοιχεία Απόκτησης</h3>
+          <h3 class="text-sm font-semibold text-base-content/50 uppercase tracking-widest mb-4">Στοιχεία Τιμολόγησης</h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            <!-- Τύπος Απόκτησης -->
+            <!-- Τιμή -->
             <label class="form-control w-full">
-              <div class="label pb-1"><span class="label-text font-medium">Τύπος Απόκτησης <span class="text-error">*</span></span></div>
-              <select formControlName="acquisitionType" class="select select-bordered w-full">
-                <option [ngValue]="AcquisitionType.Purchase">Αγορά</option>
-                <option [ngValue]="AcquisitionType.Leasing">Leasing</option>
-              </select>
-            </label>
-
-            <!-- Κόστος Απόκτησης -->
-            <label class="form-control w-full">
-              <div class="label pb-1"><span class="label-text font-medium">Κόστος Απόκτησης (€) <span class="text-error">*</span></span></div>
-              <input type="number" formControlName="acquisitionCost" min="0" step="0.01" placeholder="0.00"
+              <div class="label pb-1"><span class="label-text font-medium">Τιμή (€) <span class="text-error">*</span></span></div>
+              <input type="number" formControlName="cost" min="0" step="0.01" placeholder="0.00"
                 class="input input-bordered w-full"
-                [class.input-error]="f['acquisitionCost'].invalid && f['acquisitionCost'].touched" />
-              @if (f['acquisitionCost'].invalid && f['acquisitionCost'].touched) {
+                [class.input-error]="f['cost'].invalid && f['cost'].touched" />
+              @if (f['cost'].invalid && f['cost'].touched) {
                 <div class="label pt-1"><span class="label-text-alt text-error">Απαιτείται έγκυρο ποσό</span></div>
               }
             </label>
 
-            <!-- Μηνιαίο Κόστος Leasing (conditional) -->
-            @if (isLeasing) {
-              <label class="form-control w-full">
-                <div class="label pb-1"><span class="label-text font-medium">Μηνιαία Δόση Leasing (€)</span></div>
-                <input type="number" formControlName="monthlyLeaseCost" min="0" step="0.01" placeholder="0.00"
-                  class="input input-bordered w-full" />
-              </label>
-            }
+             <!-- Ανά -->
+            <label class="form-control w-full">
+              <div class="label pb-1"><span class="label-text font-medium">Τιμή αφορά <span class="text-error">*</span></span></div>
+              <select formControlName="rateUnit" class="select select-bordered w-full">
+                <option [ngValue]="RateUnit.PerHour">Ώρα</option>
+                <option [ngValue]="RateUnit.PerDay">Ημέρα</option>
+                <option [ngValue]="RateUnit.PerMonth">Μήνα</option>
+                <option [ngValue]="RateUnit.Sale">Πώληση</option>
+              </select>
+            </label>
 
           </div>
         </div>
@@ -220,4 +213,69 @@
     </div>
   </div>
 
+  <!-- ── Photos (edit mode only) ────────────────────────────────────── -->
+  @if (isEdit()) {
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+      <div class="card-body p-6">
+
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-semibold text-base-content/50 uppercase tracking-widest">Φωτογραφίες</h3>
+          <label class="btn btn-sm btn-outline btn-primary gap-1.5 cursor-pointer" [class.loading]="photoUploading()">
+            @if (!photoUploading()) {
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5m-13.5-9L12 3m0 0 4.5 4.5M12 3v13.5" />
+              </svg>
+              Ανέβασμα
+            }
+            <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" [disabled]="photoUploading()" />
+          </label>
+        </div>
+
+        @if (photoError()) {
+          <div role="alert" class="alert alert-error mb-4 py-2 text-sm">
+            <span>{{ photoError() }}</span>
+          </div>
+        }
+
+        @if (photos().length === 0) {
+          <div class="text-center py-8 text-base-content/40">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10 mx-auto mb-2 opacity-30">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+            </svg>
+            <p class="text-sm">Δεν υπάρχουν φωτογραφίες. Ανεβάστε την πρώτη!</p>
+          </div>
+        } @else {
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            @for (photo of photos(); track photo.id) {
+              <div class="relative group aspect-square rounded-xl overflow-hidden border-2"
+                   [class.border-primary]="photo.isMain"
+                   [class.border-base-200]="!photo.isMain">
+                <img [src]="photo.url" [alt]="'Photo'" class="w-full h-full object-cover" />
+
+                @if (photo.isMain) {
+                  <div class="absolute top-1.5 left-1.5">
+                    <span class="badge badge-primary badge-xs">Κύρια</span>
+                  </div>
+                }
+
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  @if (!photo.isMain) {
+                    <button type="button" class="btn btn-xs btn-primary" (click)="setMain(photo.id)">
+                      Κύρια
+                    </button>
+                  }
+                  <button type="button" class="btn btn-xs btn-error" (click)="deletePhoto(photo.id)">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-3.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+      </div>
+    </div>
+  }
 </div>

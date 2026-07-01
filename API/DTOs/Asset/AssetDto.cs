@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using static API.Entities.Enums;
 
 namespace API.DTOs.Asset;
@@ -15,17 +16,23 @@ public class AssetDto
     public string AssetTypeName { get; set; } = null!;
     public string Name { get; set; } = null!;
     public string? Notes { get; set; }
-    public AcquisitionType AcquisitionType { get; set; }
-    public decimal AcquisitionCost { get; set; }
-    public decimal? MonthlyLeaseCost { get; set; }
+     public RateUnit RateUnit { get; set; }
+    public decimal Cost { get; set; }
     public AssetStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
+
+    public string? PhotoUrl { get; set; }
  
     // key = AssetTypeField.Name (machine key), value = the actual stored value
     // (string/number/bool/date already coerced to its natural CLR type)
     public Dictionary<string, object?> Attributes { get; set; } = new();
 }
  
+public class AssetDetailDto : AssetDto
+{
+    public List<PhotoDto> Photos { get; set; } = new();
+}
+
 public class AssetLookupDto
 {
     public Guid Id { get; set; }
@@ -38,9 +45,8 @@ public class AssetCreateDto
     public required Guid AssetTypeId { get; set; }
     public required string Name { get; set; }
     public string? Notes { get; set; }
-    public AcquisitionType AcquisitionType { get; set; }
-    public decimal AcquisitionCost { get; set; }
-    public decimal? MonthlyLeaseCost { get; set; }
+    public RateUnit RateUnit { get; set; }
+    public decimal Cost { get; set; }
  
     // key = AssetTypeField.Name, value = raw value from the Angular form
     // (always sent as JSON; server parses/validates against the field's DataType)
@@ -51,18 +57,25 @@ public class AssetUpdateDto
 {
     public required string Name { get; set; }
     public string? Notes { get; set; }
-    public AcquisitionType AcquisitionType { get; set; }
-    public decimal AcquisitionCost { get; set; }
-    public decimal? MonthlyLeaseCost { get; set; }
+    public RateUnit RateUnit { get; set; }
+    public decimal Cost { get; set; }
     public Dictionary<string, object?> Attributes { get; set; } = new();
-    // AssetTypeId is intentionally NOT updatable — switching category would
-    // invalidate the whole Attributes set against a different schema.
-    // Create a new Asset under the new type instead.
 }
  
 public class AssetStatusUpdateDto
 {
     public AssetStatus Status { get; set; }
+}
+
+public class AssetContractHistDto
+{
+    public Guid ContractId { get; set; }
+    public string CustomerName { get; set; } = null!;
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public RentalStatus Status { get; set; }
+    public decimal TotalAmount { get; set; }
+    public string? Notes { get; set; }
 }
  
 
@@ -72,6 +85,16 @@ public class CostAssetHistDto
     public DateTime Date { get; set; }
     public string Description { get; set; }=null!;
     public decimal Cost { get; set; }
+    public string? MaintainedBy { get; set; }
+}
+public class CostAssetHistUpdateDto
+{
+    public DateTime Date { get; set; }
+    [Required, MaxLength(250)]
+    public string Description { get; set; } = null!;
+    [Range(0, double.MaxValue)]
+    public decimal Cost { get; set; }
+    [MaxLength(100)]
     public string? MaintainedBy { get; set; }
 }
 
@@ -88,4 +111,11 @@ public class AssetAttributeUpdateDto
     // Must match an AssetTypeField.Name on this asset's AssetType.
     public required string FieldName { get; set; }
     public object? Value { get; set; }
+}
+
+public class PhotoDto
+{
+    public Guid Id { get; set; }
+    public string Url { get; set; } = null!;
+    public bool IsMain { get; set; }
 }

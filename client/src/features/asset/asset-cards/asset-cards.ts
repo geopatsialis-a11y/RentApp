@@ -1,17 +1,17 @@
 import { Component, inject, input, output } from '@angular/core';
-import { DatePipe, CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { AssetDto, AssetStatus, RateUnit } from '../../../types/asset';
+import { AssetDto, AssetStatus,  RateUnit } from '../../../types/asset';
+import { PaginationMetadata } from '../../../types/pagination';
 import { AssetService } from '../../../core/services/asset-service';
 import { Paginator } from '../../../shared/paginator/paginator';
-import { PaginationMetadata } from '../../../types/pagination';
 
 @Component({
-  selector: 'app-asset-table',
-  imports: [DatePipe, CurrencyPipe, Paginator],
-  templateUrl: './asset-table.html',
+  selector: 'app-asset-cards',
+  imports: [CurrencyPipe, DatePipe, Paginator],
+  templateUrl: './asset-cards.html',
 })
-export class AssetTable {
+export class AssetCards {
   items      = input.required<AssetDto[]>();
   pagination = input<PaginationMetadata | null>(null);
 
@@ -21,7 +21,7 @@ export class AssetTable {
   private router  = inject(Router);
   private service = inject(AssetService);
 
-  readonly AssetStatus     = AssetStatus;
+  readonly AssetStatus = AssetStatus;
   readonly RateUnit  = RateUnit;
 
   rateUnitLabel(r: RateUnit): string {
@@ -33,8 +33,6 @@ export class AssetTable {
     };
     return map[r] ?? '—';
   }
-  
-
 
   statusLabel(s: AssetStatus): string {
     const map: Record<number, string> = {

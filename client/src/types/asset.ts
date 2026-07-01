@@ -1,6 +1,8 @@
-export enum AcquisitionType { Purchase = 0, Leasing = 1 }
+export enum RateUnit { PerHour = 0, PerDay = 1, PerMonth = 2, Sale = 3 }
 export enum AssetStatus { Available = 0, Rented = 1, UnderMaintenance = 2, Damaged = 3 }
 export enum FieldDataType { Text = 0, Number = 1, Boolean = 2, Date = 3, DateTime = 4 }
+export enum RentalStatus { Pending = 0, Active = 1, Completed = 2, Cancelled = 3 }
+
 
 export interface AssetTypeFieldOptionDto {
   id: string;
@@ -36,6 +38,11 @@ export interface AssetTypeLookupDto {
   id: string;
   name: string;
 }
+export interface PhotoDto {
+  id: string;
+  url: string;
+  isMain: boolean;
+}
 
 export interface AssetDto {
   id: string;
@@ -43,13 +50,18 @@ export interface AssetDto {
   assetTypeName: string;
   name: string;
   notes?: string;
-  acquisitionType: AcquisitionType;
-  acquisitionCost: number;
-  monthlyLeaseCost?: number;
+  rateUnit: RateUnit;
+  cost: number;
   status: AssetStatus;
   createdAt: string;
+  photoUrl?: string;
   attributes: Record<string, unknown>;
 }
+
+export interface AssetDetailDto extends AssetDto {
+  photos: PhotoDto[];
+}
+
 
 export interface AssetLookupDto {
   id: string;
@@ -61,18 +73,16 @@ export interface AssetCreateDto {
   assetTypeId: string;
   name: string;
   notes?: string;
-  acquisitionType: AcquisitionType;
-  acquisitionCost: number;
-  monthlyLeaseCost?: number;
+  rateUnit: RateUnit;
+  cost: number;
   attributes: Record<string, unknown>;
 }
 
 export interface AssetUpdateDto {
   name: string;
   notes?: string;
-  acquisitionType: AcquisitionType;
-  acquisitionCost: number;
-  monthlyLeaseCost?: number;
+  rateUnit: RateUnit;
+  cost: number;
   attributes: Record<string, unknown>;
 }
 
@@ -93,4 +103,41 @@ export interface CostAssetHistCreateDto {
   description: string;
   cost: number;
   maintainedBy?: string;
+}
+
+
+export interface CostAssetHistUpdateDto {
+  date: string;
+  description: string;
+  cost: number;
+  maintainedBy?: string;
+}
+
+
+export interface AssetContractHistDto {
+  contractId: string;
+  customerName: string;
+  startDate: string;
+  endDate: string;
+  status: RentalStatus;
+  totalAmount: number;
+  notes?: string;
+}
+
+
+export interface AssetAttributeFilter {
+  fieldName: string;
+  equals?: string;
+  minValue?: number;
+  maxValue?: number;
+}
+
+export interface AssetSearchRequest {
+  assetTypeId: string;
+  status?: number;
+  search?: string;
+  pageNumber?: number;
+  pageSize?: number;
+  sortBy?: string;
+  filters: AssetAttributeFilter[];
 }

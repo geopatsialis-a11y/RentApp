@@ -4,6 +4,7 @@ using System.Text.Json;
 using API.Data.Contexts;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260701120215_photoTable")]
+    partial class photoTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -113,11 +116,14 @@ namespace API.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<decimal>("AcquisitionCost")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("AcquisitionType")
+                        .HasColumnType("integer");
+
                     b.Property<Guid>("AssetTypeId")
                         .HasColumnType("uuid");
-
-                    b.Property<decimal>("Cost")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -137,6 +143,9 @@ namespace API.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
+                    b.Property<decimal?>("MonthlyLeaseCost")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -151,9 +160,6 @@ namespace API.Data.Migrations
 
                     b.Property<JsonDocument>("PropertiesJson")
                         .HasColumnType("jsonb");
-
-                    b.Property<int>("RateUnit")
-                        .HasColumnType("integer");
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
@@ -178,13 +184,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("AssetTypeId");
 
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
                     b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.HasIndex("TenantId", "AssetTypeId")
                         .HasDatabaseName("idx_asset_tenant_type");
@@ -258,19 +258,11 @@ namespace API.Data.Migrations
 
                     b.HasIndex("AssetTypeFieldId");
 
-                    b.HasIndex("CreatedBy");
-
                     b.HasIndex("DateValue");
 
                     b.HasIndex("DecimalValue");
 
-                    b.HasIndex("DeletedBy");
-
                     b.HasIndex("StringValue");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.HasIndex("AssetId", "AssetTypeFieldId")
                         .IsUnique();
@@ -385,12 +377,6 @@ namespace API.Data.Migrations
 
                     b.HasIndex("AssetTypeId");
 
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
-                    b.HasIndex("UpdatedBy");
-
                     b.HasIndex("TenantId", "AssetTypeId", "Name")
                         .IsUnique();
 
@@ -456,14 +442,6 @@ namespace API.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AssetTypeFieldId");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("AssetTypeFieldOptions");
                 });
@@ -575,15 +553,7 @@ namespace API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
                     b.HasIndex("CustomerId");
-
-                    b.HasIndex("DeletedBy");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("Contacts");
                 });
@@ -662,15 +632,9 @@ namespace API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("DeletedBy");
-
                     b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("Contracts");
                 });
@@ -728,14 +692,6 @@ namespace API.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AssetId");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.HasIndex("ContractId", "AssetId")
                         .IsUnique();
@@ -804,14 +760,6 @@ namespace API.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AssetId");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("CostAssetHists");
                 });
@@ -883,12 +831,6 @@ namespace API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
-                    b.HasIndex("UpdatedBy");
-
                     b.HasIndex("TenantId", "Afm")
                         .IsUnique();
 
@@ -919,6 +861,9 @@ namespace API.Data.Migrations
                     b.Property<string>("DeletedBy")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("EntityType")
                         .IsRequired()
@@ -958,14 +903,6 @@ namespace API.Data.Migrations
                         .HasColumnName("xmin");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
-                    b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("FileAttachments");
                 });
@@ -1044,13 +981,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("ContractId");
 
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
                     b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("Invoices");
                 });
@@ -1158,13 +1089,7 @@ namespace API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
                     b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("MemberInvites");
                 });
@@ -1230,15 +1155,9 @@ namespace API.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedBy");
-
-                    b.HasIndex("DeletedBy");
-
                     b.HasIndex("InvoiceId");
 
                     b.HasIndex("TenantId");
-
-                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("Payments");
                 });
@@ -1489,35 +1408,7 @@ namespace API.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
                     b.Navigation("AssetType");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.AssetAttributeValue", b =>
@@ -1534,37 +1425,9 @@ namespace API.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
                     b.Navigation("Asset");
 
                     b.Navigation("AssetTypeField");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.AssetTypeField", b =>
@@ -1575,35 +1438,7 @@ namespace API.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
                     b.Navigation("AssetType");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.AssetTypeFieldOption", b =>
@@ -1614,113 +1449,29 @@ namespace API.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
                     b.Navigation("AssetTypeField");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.Contact", b =>
                 {
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("API.Entities.Customer", "Customer")
                         .WithMany("Contacts")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
-                    b.Navigation("CreatedByMember");
-
                     b.Navigation("Customer");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.Contract", b =>
                 {
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("API.Entities.Customer", "Customer")
                         .WithMany("Contracts")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
-                    b.Navigation("CreatedByMember");
-
                     b.Navigation("Customer");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.ContractAsset", b =>
@@ -1737,37 +1488,9 @@ namespace API.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
                     b.Navigation("Asset");
 
                     b.Navigation("Contract");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.CostAssetHist", b =>
@@ -1778,97 +1501,18 @@ namespace API.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
                     b.Navigation("Asset");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.Customer", b =>
                 {
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
                     b.HasOne("API.Entities.Tenant", "Tenant")
                         .WithMany("Customers")
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
                     b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
-                });
-
-            modelBuilder.Entity("API.Entities.FileAttachment", b =>
-                {
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.Invoice", b =>
@@ -1879,35 +1523,7 @@ namespace API.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
                     b.Navigation("Contract");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.Member", b =>
@@ -1923,72 +1539,24 @@ namespace API.Data.Migrations
 
             modelBuilder.Entity("API.Entities.MemberInvite", b =>
                 {
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
                     b.HasOne("API.Entities.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
                     b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.Payment", b =>
                 {
-                    b.HasOne("API.Entities.Member", "CreatedByMember")
-                        .WithMany()
-                        .HasForeignKey("CreatedBy")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "DeletedByMember")
-                        .WithMany()
-                        .HasForeignKey("DeletedBy");
-
                     b.HasOne("API.Entities.Invoice", "Invoice")
                         .WithMany("Payments")
                         .HasForeignKey("InvoiceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("API.Entities.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Member", "UpdatedByMember")
-                        .WithMany()
-                        .HasForeignKey("UpdatedBy");
-
-                    b.Navigation("CreatedByMember");
-
-                    b.Navigation("DeletedByMember");
-
                     b.Navigation("Invoice");
-
-                    b.Navigation("Tenant");
-
-                    b.Navigation("UpdatedByMember");
                 });
 
             modelBuilder.Entity("API.Entities.Photo", b =>

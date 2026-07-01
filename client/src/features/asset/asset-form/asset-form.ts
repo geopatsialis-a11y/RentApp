@@ -3,8 +3,10 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, ValidatorFn, Validators } 
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AssetService } from '../../../core/services/asset-service';
 import {
-  AcquisitionType, AssetCreateDto, AssetTypeFieldDto,
-  AssetTypeLookupDto, AssetUpdateDto, FieldDataType
+  AssetCreateDto, AssetDetailDto, AssetDto, AssetTypeFieldDto,
+  AssetTypeLookupDto, AssetUpdateDto, FieldDataType,
+  PhotoDto,
+  RateUnit
 } from '../../../types/asset';
 
 @Component({
@@ -21,9 +23,9 @@ export class AssetForm implements OnInit {
   private route   = inject(ActivatedRoute);
   private service = inject(AssetService);
 
-  readonly AcquisitionType = AcquisitionType;
-  readonly FieldDataType   = FieldDataType;
-
+  readonly RateUnit      = RateUnit;
+  readonly FieldDataType = FieldDataType;
+  
   isEdit        = signal(false);
   loading       = signal(false);
   schemaLoading = signal(false);
@@ -33,19 +35,23 @@ export class AssetForm implements OnInit {
   assetTypes = signal<AssetTypeLookupDto[]>([]);
   schema     = signal<AssetTypeFieldDto[]>([]);
 
+  // Photo state
+  photos        = signal<PhotoDto[]>([]);
+  photoUploading = signal(false);
+  photoError     = signal('');
+
+
   form = this.fb.group({
-    assetTypeId:      ['', Validators.required],
-    name:             ['', [Validators.required, Validators.maxLength(150)]],
-    notes:            ['', Validators.maxLength(500)],
-    acquisitionType:  [AcquisitionType.Purchase as AcquisitionType, Validators.required],
-    acquisitionCost:  [0 as number, [Validators.required, Validators.min(0)]],
-    monthlyLeaseCost: [null as number | null],
-    attributes:       this.fb.group({}),
+       assetTypeId: ['', Validators.required],
+    name:        ['', [Validators.required, Validators.maxLength(150)]],
+    notes:       ['', Validators.maxLength(500)],
+    rateUnit:    [RateUnit.PerDay as RateUnit, Validators.required],
+    cost:        [0 as number, [Validators.required, Validators.min(0)]],
+    attributes:  this.fb.group({}),
   });
 
   get f()     { return this.form.controls; }
   get attrs() { return this.form.get('attributes') as FormGroup; }
-  get isLeasing() { return +this.f['acquisitionType'].value! === AcquisitionType.Leasing; }
 
   ngOnInit() {
     this.service.getAssetTypes().subscribe(types => this.assetTypes.set(types));
@@ -54,14 +60,14 @@ export class AssetForm implements OnInit {
     if (id) {
       this.isEdit.set(true);
       this.assetId = id;
-      this.service.getById(id).subscribe(asset => {
+      this.service.getById(id).subscribe((asset: AssetDetailDto) => {
         this.f['assetTypeId'].setValue(asset.assetTypeId);
         this.f['assetTypeId'].disable();
         this.f['name'].setValue(asset.name);
         this.f['notes'].setValue(asset.notes ?? '');
-        this.f['acquisitionType'].setValue(asset.acquisitionType);
-        this.f['acquisitionCost'].setValue(asset.acquisitionCost);
-        this.f['monthlyLeaseCost'].setValue(asset.monthlyLeaseCost ?? null);
+        this.f['rateUnit'].setValue(asset.rateUnit);
+        this.f['cost'].setValue(asset.cost);
+        this.photos.set(asset.photos ?? []);
         this.loadSchema(asset.assetTypeId, asset.attributes);
       });
     } else {
@@ -125,6 +131,45 @@ export class AssetForm implements OnInit {
     return result;
   }
 
+    // ── Photo management ──────────────────────────────────────────────────
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length || !this.assetId) return;
+    const file = input.files[0];
+    input.value = '';  // reset so same file can be re-selected
+
+    this.photoUploading.set(true);
+    this.photoError.set('');
+    this.service.addPhoto(this.assetId, file).subscribe({
+      next: (photo) => {
+        this.photos.update(p => [...p, photo]);
+        this.photoUploading.set(false);
+      },
+      error: (err) => {
+        this.photoError.set(err.error?.message || 'Σφάλμα ανεβάσματος φωτογραφίας.');
+        this.photoUploading.set(false);
+      }
+    });
+  }
+
+  setMain(photoId: string) {
+    if (!this.assetId) return;
+    this.service.setMainPhoto(this.assetId, photoId).subscribe({
+      next: (asset) => this.photos.set(asset.photos),
+      error: () => this.photoError.set('Σφάλμα ορισμού κύριας φωτογραφίας.')
+    });
+  }
+
+  deletePhoto(photoId: string) {
+    if (!this.assetId || !confirm('Διαγραφή φωτογραφίας;')) return;
+    this.service.deletePhoto(this.assetId, photoId).subscribe({
+      next: () => this.photos.update(p => p.filter(x => x.id !== photoId)),
+      error: () => this.photoError.set('Σφάλμα διαγραφής φωτογραφίας.')
+    });
+  }
+
+  // ── Form submit ───────────────────────────────────────────────────────
   onSubmit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true);
@@ -135,20 +180,18 @@ export class AssetForm implements OnInit {
 
     const req$ = this.isEdit()
       ? this.service.update(this.assetId!, {
-          name: raw.name!,
-          notes: raw.notes || undefined,
-          acquisitionType: +raw.acquisitionType! as AcquisitionType,
-          acquisitionCost: +raw.acquisitionCost!,
-          monthlyLeaseCost: raw.monthlyLeaseCost != null ? +raw.monthlyLeaseCost : undefined,
+          name:       raw.name!,
+          notes:      raw.notes || undefined,
+          rateUnit:   +raw.rateUnit! as RateUnit,
+          cost:       +raw.cost!,
           attributes,
         } as AssetUpdateDto)
       : this.service.create({
           assetTypeId: raw.assetTypeId!,
-          name: raw.name!,
-          notes: raw.notes || undefined,
-          acquisitionType: +raw.acquisitionType! as AcquisitionType,
-          acquisitionCost: +raw.acquisitionCost!,
-          monthlyLeaseCost: raw.monthlyLeaseCost != null ? +raw.monthlyLeaseCost : undefined,
+          name:        raw.name!,
+          notes:       raw.notes || undefined,
+          rateUnit:    +raw.rateUnit! as RateUnit,
+          cost:        +raw.cost!,
           attributes,
         } as AssetCreateDto);
 

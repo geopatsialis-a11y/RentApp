@@ -4,7 +4,12 @@ import { environment } from '../../environments/environment';
 import {
   AssetDto, AssetCreateDto, AssetUpdateDto, AssetStatusUpdateDto,
   AssetLookupDto, AssetTypeLookupDto, AssetTypeDto,
-  CostAssetHistDto, CostAssetHistCreateDto
+  CostAssetHistDto, CostAssetHistCreateDto,
+  PhotoDto,
+  AssetSearchRequest,
+  AssetDetailDto,
+  AssetContractHistDto,
+  CostAssetHistUpdateDto
 } from '../../types/asset';
 import { PaginatedResult } from '../../types/pagination';
 
@@ -14,17 +19,19 @@ export class AssetService {
   private base = `${environment.apiUrl}asset`;
   private typeBase = `${environment.apiUrl}assettype`;
 
-  getAssets(pageNumber: number, pageSize: number, searchTerm?: string, assetTypeId?: string, status?: number) {
-    let params = new HttpParams()
+getAssets(pageNumber: number, pageSize: number, searchTerm?: string, assetTypeId?: string, status?: number, sortBy?: string) {
+      let params = new HttpParams()
       .set('pageNumber', pageNumber)
       .set('pageSize', pageSize);
     if (searchTerm) params = params.set('search', searchTerm);
     if (assetTypeId) params = params.set('assetTypeId', assetTypeId);
     if (status !== undefined && status !== null) params = params.set('status', status);
+    if (sortBy) params = params.set('sortBy', sortBy);
+
     return this.http.get<PaginatedResult<AssetDto>>(this.base, { params });
   }
 
-  getById(id: string) { return this.http.get<AssetDto>(`${this.base}/${id}`); }
+  getById(id: string) { return this.http.get<AssetDetailDto>(`${this.base}/${id}`); }
 
   create(dto: AssetCreateDto) { return this.http.post<AssetDto>(this.base, dto); }
 
@@ -40,11 +47,55 @@ export class AssetService {
 
   getAssetTypeById(id: string) { return this.http.get<AssetTypeDto>(`${this.typeBase}/${id}`); }
 
-  getMaintenanceHistory(assetId: string) {
-    return this.http.get<CostAssetHistDto[]>(`${this.base}/${assetId}/maintenance-history`);
+ getMaintenanceHistory(assetId: string, page = 1, pageSize = 5) {
+    const params = new HttpParams().set('pageNumber', page).set('pageSize', pageSize);
+    return this.http.get<PaginatedResult<CostAssetHistDto>>(`${this.base}/${assetId}/maintenance-history`, { params });
   }
 
   addMaintenanceRecord(assetId: string, dto: CostAssetHistCreateDto) {
     return this.http.post<CostAssetHistDto>(`${this.base}/${assetId}/maintenance-history`, dto);
+  }
+
+  
+  getContractHistory(assetId: string, page = 1, pageSize = 5) {
+    const params = new HttpParams().set('pageNumber', page).set('pageSize', pageSize);
+    return this.http.get<PaginatedResult<AssetContractHistDto>>(`${this.base}/${assetId}/contracts`, { params });
+  }
+
+  updateMaintenanceRecord(assetId: string, recordId: string, dto: CostAssetHistUpdateDto) {
+    return this.http.put<CostAssetHistDto>(`${this.base}/${assetId}/maintenance-history/${recordId}`, dto);
+  }
+
+  deleteMaintenanceRecord(assetId: string, recordId: string) {
+    return this.http.delete(`${this.base}/${assetId}/maintenance-history/${recordId}`);
+  }
+
+  searchAssets(req: AssetSearchRequest) {
+    const body = {
+      assetTypeId: req.assetTypeId,
+      status: req.status,
+      search: req.search,
+      page: req.pageNumber ?? 1,
+      pageSize: req.pageSize ?? 12,
+      sortBy: req.sortBy,
+      filters: req.filters.map(f => ({ fieldName: f.fieldName, equals: f.equals }))
+    };
+    return this.http.post<PaginatedResult<AssetDto>>(`${this.base}/search`, body);
+  }
+
+
+  
+  addPhoto(assetId: string, file: File) {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<PhotoDto>(`${this.base}/${assetId}/photos`, form);
+  }
+
+  deletePhoto(assetId: string, photoId: string) {
+    return this.http.delete(`${this.base}/${assetId}/photos/${photoId}`);
+  }
+
+  setMainPhoto(assetId: string, photoId: string) {
+    return this.http.patch<AssetDetailDto>(`${this.base}/${assetId}/photos/${photoId}/main`, {});
   }
 }

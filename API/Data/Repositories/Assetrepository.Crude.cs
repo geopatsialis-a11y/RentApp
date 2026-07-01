@@ -36,8 +36,16 @@ public partial class AssetRepository
             query = query.Where(a => a.Name.ToLower().Contains(term));
         }
  
-        var ordered = query.OrderByDescending(a => a.CreatedAt);
- 
+        IOrderedQueryable<Asset> ordered = pagingParams.SortBy switch
+        {
+            "name_asc"  => query.OrderBy(a => a.Name),
+            "name_desc" => query.OrderByDescending(a => a.Name),
+            "cost_asc"  => query.OrderBy(a => a.Cost),
+            "cost_desc" => query.OrderByDescending(a => a.Cost),
+            "date_asc"  => query.OrderBy(a => a.CreatedAt),
+            _           => query.OrderByDescending(a => a.CreatedAt)
+        };
+
         // Materialize entities first (attribute flattening needs in-memory work),
         // then page manually since PaginationHelper expects IQueryable<TDto> —
         // here we project to DTO via AsEnumerable to call the local mapper.
@@ -64,14 +72,15 @@ public partial class AssetRepository
         };
     }
  
-    public async Task<AssetDto?> GetByIdAsync(Guid id)
+    public async Task<AssetDetailDto?> GetByIdAsync(Guid id)
     {
         var asset = await context.Assets.AsNoTracking()
             .Include(a => a.AssetType)
             .Include(a => a.AttributeValues).ThenInclude(v => v.AssetTypeField)
+            .Include(a => a.Photos)
             .FirstOrDefaultAsync(a => a.Id == id);
  
-        return asset == null ? null : MapToDto(asset);
+        return asset == null ? null : MapToDetailDto(asset);
     }
  
     public async Task<List<AssetLookupDto>> GetLookupAsync(string? search, Guid? assetTypeId)
@@ -289,55 +298,137 @@ public partial class AssetRepository
     //  MAINTENANCE HISTORY (CostAssetHist)
     // ==================================================================
  
-    public async Task<List<CostAssetHist>> GetMaintenanceHistoryAsync(Guid assetId)
+    public async Task<PaginatedResult<CostAssetHistDto>> GetMaintenanceHistoryAsync(Guid assetId, PagingParams pagingParams)
     {
-        return await context.CostAssetHists
+         var query = context.CostAssetHists
             .AsNoTracking()
             .Where(h => h.AssetId == assetId)
             .OrderByDescending(h => h.Date)
-            .ToListAsync();
+            .Select(h => new CostAssetHistDto
+            {
+                Id          = h.Id,
+                Date        = h.Date,
+                Description = h.Description,
+                Cost        = h.Cost,
+                MaintainedBy = h.MaintainedBy
+            });
+        return await PaginationHelper.CreateAsync(query, pagingParams.PageNumber, pagingParams.PageSize);
     }
  
     public async Task AddMaintenanceRecordAsync(CostAssetHist record)
     {
         await context.CostAssetHists.AddAsync(record);
     }
+
+      public  async Task<CostAssetHist?> GetMaintenanceRecordByIdAsync(Guid recordId)
+        => await context.CostAssetHists.FirstOrDefaultAsync(h => h.Id == recordId);
+
+    public void UpdateMaintenanceRecord(CostAssetHist record)
+        =>  context.CostAssetHists.Update(record);
+
+    public void RemoveMaintenanceRecord(CostAssetHist record)
+    {
+        record.IsDeleted = true;
+        record.DeletedAt = DateTime.UtcNow;
+        context.Entry(record).State = EntityState.Modified;
+    }
+
+
+    public async Task<PaginatedResult<AssetContractHistDto>> GetContractHistoryAsync(Guid assetId, PagingParams pagingParams)
+    {
+        var query = context.ContractAssets
+            .AsNoTracking()
+            .Where(ca => ca.AssetId == assetId)
+            .OrderByDescending(ca => ca.Contract.StartDate)
+            .Select(ca => new AssetContractHistDto
+            {
+                ContractId   = ca.ContractId,
+                CustomerName = ca.Contract.Customer.Name,
+                StartDate    = ca.Contract.StartDate,
+                EndDate      = ca.Contract.EndDate,
+                Status       = ca.Contract.Status,
+                TotalAmount  = ca.Contract.TotalAmount,
+                Notes        = ca.Notes
+            });
+        return await PaginationHelper.CreateAsync(query, pagingParams.PageNumber, pagingParams.PageSize);
+    }
  
+    
     // ==================================================================
-    //  Mapping: Asset entity (+ loaded AttributeValues) -> AssetDto
+    //  PHOTOS
     // ==================================================================
- 
-    private static AssetDto MapToDto(Asset asset)
+
+    public Task<bool> HasPhotosAsync(Guid assetId)
+        => context.Photos.AnyAsync(p => p.AssetId == assetId);
+
+    public async Task AddPhotoAsync(Photo photo)
+        => await context.Photos.AddAsync(photo);
+
+    public Task<Photo?> GetPhotoByIdAsync(Guid photoId)
+        => context.Photos.FirstOrDefaultAsync(p => p.Id == photoId);
+
+    public Task<Photo?> GetFirstPhotoAsync(Guid assetId)
+        => context.Photos.FirstOrDefaultAsync(p => p.AssetId == assetId);
+
+    public Task<List<Photo>> GetPhotosAsync(Guid assetId)
+        => context.Photos.Where(p => p.AssetId == assetId).ToListAsync();
+
+    public void RemovePhoto(Photo photo)
+        => context.Photos.Remove(photo);
+
+
+
+    // ==================================================================
+    //  Mapping: Asset entity -> DTO
+    //  MapToDto       — lean, used for list/search (no Photos loaded)
+    //  MapToDetailDto — full, used for single-asset endpoints (Photos included)
+    // ==================================================================
+    
+    private static AssetDto MapToDto(Asset asset) => new()
+    {
+         Id           = asset.Id,
+        AssetTypeId  = asset.AssetTypeId,
+        AssetTypeName= asset.AssetType?.Name ?? string.Empty,
+        Name         = asset.Name,
+        Notes        = asset.Notes,
+        RateUnit     = asset.RateUnit,
+        Cost         = asset.Cost,
+        Status       = asset.Status,
+        CreatedAt    = asset.CreatedAt,
+        PhotoUrl     = asset.PhotoUrl,
+        Attributes   = BuildAttributes(asset)
+    };
+
+    private static AssetDetailDto MapToDetailDto(Asset asset) => new()
+    {
+        Id           = asset.Id,
+        AssetTypeId  = asset.AssetTypeId,
+        AssetTypeName= asset.AssetType?.Name ?? string.Empty,
+        Name         = asset.Name,
+        Notes        = asset.Notes,
+        RateUnit     = asset.RateUnit,
+        Cost         = asset.Cost,
+        Status       = asset.Status,
+        CreatedAt    = asset.CreatedAt,
+        PhotoUrl     = asset.PhotoUrl,
+        Photos       = asset.Photos.Select(p => new PhotoDto { Id = p.Id, Url = p.Url, IsMain = p.IsMain }).ToList(),
+        Attributes   = BuildAttributes(asset)
+    };
+
+    private static Dictionary<string, object?> BuildAttributes(Asset asset)
     {
         var attributes = new Dictionary<string, object?>();
- 
-        foreach (var value in asset.AttributeValues)
+         foreach (var value in asset.AttributeValues)
         {
-            var key = value.AssetTypeField.Name;
-            object? resolved = value.AssetTypeField.DataType switch
+            attributes[value.AssetTypeField.Name] = value.AssetTypeField.DataType switch
             {
-                FieldDataType.Text => value.StringValue,
-                FieldDataType.Number => value.DecimalValue,
-                FieldDataType.Boolean => value.BoolValue,
-                FieldDataType.Date or FieldDataType.DateTime => value.DateValue,
-                _ => null
+                FieldDataType.Text                              => value.StringValue,
+                FieldDataType.Number                            => (object?)value.DecimalValue,
+                FieldDataType.Boolean                           => value.BoolValue,
+                FieldDataType.Date or FieldDataType.DateTime    => value.DateValue,
+                _                                               => null
             };
-            attributes[key] = resolved;
         }
- 
-        return new AssetDto
-        {
-            Id = asset.Id,
-            AssetTypeId = asset.AssetTypeId,
-            AssetTypeName = asset.AssetType?.Name ?? string.Empty,
-            Name = asset.Name,
-            Notes = asset.Notes,
-            AcquisitionType = asset.AcquisitionType,
-            AcquisitionCost = asset.AcquisitionCost,
-            MonthlyLeaseCost = asset.MonthlyLeaseCost,
-            Status = asset.Status,
-            CreatedAt = asset.CreatedAt,
-            Attributes = attributes
-        };
+         return attributes;
     }
 }

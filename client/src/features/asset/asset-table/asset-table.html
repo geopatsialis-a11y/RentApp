@@ -46,10 +46,10 @@
           
             <!-- Cost -->
             <td class="text-sm font-mono">
-              {{ a.acquisitionCost | currency:'EUR':'symbol':'1.2-2':'el' }}
-              @if (a.monthlyLeaseCost) {
-                <span class="text-xs text-base-content/50 block">{{ a.monthlyLeaseCost | currency:'EUR':'symbol':'1.2-2':'el' }}/μήνα</span>
-              }
+              <p class="text-base font-bold text-primary">{{ a.cost | currency:'EUR':'symbol':'1.0-2':'el' }}</p>
+                @if (a.rateUnit !== RateUnit.Sale) {
+                  <span class="text-xs text-base-content/50">/ {{ rateUnitLabel(a.rateUnit) }}</span>
+                }
             </td>
             <!-- CreatedAt -->
             <td class="text-sm text-base-content/60 whitespace-nowrap">{{ a.createdAt | date:'dd/MM/yyyy' }}</td>

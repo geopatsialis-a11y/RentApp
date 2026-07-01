@@ -425,8 +425,8 @@ public class DbInitializer
                                     tenantWarehouse,
                     Name = assetName,
                     Status = Enums.AssetStatus.Available,
-                    AcquisitionCost = faker.Random.Decimal(50, 5000),
-                    // Κάνουμε Serialize το Dictionary σε JSONB
+                    Cost = faker.Random.Decimal(10, 500),
+                    RateUnit = faker.PickRandom<Enums.RateUnit>(),                    // Κάνουμε Serialize το Dictionary σε JSONB
                     PropertiesJson = JsonDocument.Parse(
                                         JsonSerializer.Serialize(propertiesDict)
                                     ),

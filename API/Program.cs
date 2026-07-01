@@ -10,6 +10,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using API.Helper;
+using System.Threading.Channels;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +28,17 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.EnableDetailedErrors();
 });
 
+// ------------------------------------------------------------------------------
+//    για να μπορει να χρησιμοποιήσει το AuditChannel και το AuditBackgroundService
+//------------------------------------------------------------------------------
+builder.Services.AddDbContext<AuditDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddSingleton<AuditChannel>(); //  για να δημιουργηθεί ένα μόνο instance του AuditChannel για όλη την εφαρμογή
+builder.Services.AddHostedService<AuditBackgroundService>(); // ξεκινά μαζί με το app και τρέχει στο background για να αποθηκεύει τα audit logs στη βάση δεδομένων
+// ------------------------------------------------------------------------------
+
+
 // για να μπορει να χρησιμοποιήσει το IHttpContextAccessor για να πάρει το tenantId από τα claims
 builder.Services.AddHttpContextAccessor();
 
@@ -34,6 +48,8 @@ builder.Services.AddScoped<ITenantProvider, TenantProvider>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IAssetService, AssetService>();
+builder.Services.AddScoped<IPhotoService, PhotoService>();
+
 
 
 
@@ -94,6 +110,7 @@ builder.Services.AddIdentityCore<AppUser>(options =>
     .AddEntityFrameworkStores<AppDbContext>();// για να χρησιμοποιήσουμε το AppDbcontext για να αποθηκεύσουμε τα δεδομένα του Identity (users, roles, κτλ)
 // ------------------------------------------------------------------------------
 
+builder.Services.Configure<CloudinarySettings>(builder.Configuration.GetSection("CloudinarySettings"));
 
 var app = builder.Build();
 //=============================================================

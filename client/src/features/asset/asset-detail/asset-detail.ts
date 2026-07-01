@@ -3,14 +3,14 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DatePipe, CurrencyPipe } from '@angular/common';
 import { AssetService } from '../../../core/services/asset-service';
-import {
-  AssetDto, AssetStatus, AcquisitionType, AssetTypeFieldDto,
-  CostAssetHistDto, CostAssetHistCreateDto, FieldDataType
-} from '../../../types/asset';
+import { AssetDetailDto, AssetStatus, RateUnit, AssetTypeFieldDto, FieldDataType } from '../../../types/asset';
+import { AssetMaintenanceHistory } from '../asset-maintenance-history/asset-maintenance-history';
+import { AssetRentalHistory } from '../asset-rental-history/asset-rental-history';
+
 
 @Component({
   selector: 'app-asset-detail',
-  imports: [RouterLink, ReactiveFormsModule, DatePipe, CurrencyPipe],
+  imports: [RouterLink, DatePipe, CurrencyPipe, AssetMaintenanceHistory, AssetRentalHistory],
   templateUrl: './asset-detail.html',
 })
 export class AssetDetail implements OnInit {
@@ -19,18 +19,14 @@ export class AssetDetail implements OnInit {
   private router  = inject(Router);
   private service = inject(AssetService);
 
-  readonly AssetStatus     = AssetStatus;
-  readonly AcquisitionType = AcquisitionType;
-  readonly FieldDataType   = FieldDataType;
+  readonly AssetStatus = AssetStatus;
+  readonly RateUnit    = RateUnit;
+  readonly FieldDataType = FieldDataType;
 
-  asset              = signal<AssetDto | null>(null);
-  schema             = signal<AssetTypeFieldDto[]>([]);
-  maintenanceHistory = signal<CostAssetHistDto[]>([]);
-  loading            = signal(true);
-  showAddMaint       = signal(false);
-  maintSaving        = signal(false);
-  maintError         = signal('');
-  private assetId!: string;
+    asset   = signal<AssetDetailDto | null>(null);
+  schema  = signal<AssetTypeFieldDto[]>([]);
+  loading = signal(true);
+  assetId = signal('');
 
   maintForm = this.fb.group({
     date:         [new Date().toISOString().substring(0, 10), Validators.required],
@@ -42,8 +38,9 @@ export class AssetDetail implements OnInit {
   get mf() { return this.maintForm.controls; }
 
   ngOnInit() {
-    this.assetId = this.route.snapshot.paramMap.get('id')!;
-    this.service.getById(this.assetId).subscribe({
+    const id = this.route.snapshot.paramMap.get('id')!;
+    this.assetId.set(id);
+    this.service.getById(id).subscribe({
       next: (asset) => {
         this.asset.set(asset);
         this.service.getAssetTypeById(asset.assetTypeId).subscribe(type => {
@@ -53,25 +50,34 @@ export class AssetDetail implements OnInit {
       },
       error: () => { this.router.navigate(['/assets']); }
     });
-    this.service.getMaintenanceHistory(this.assetId).subscribe(h => this.maintenanceHistory.set(h));
+  }
+
+  rateUnitLabel(r: RateUnit): string {
+    const map: Record<number, string> = {
+      [RateUnit.PerHour]:  'ώρα',
+      [RateUnit.PerDay]:   'ημέρα',
+      [RateUnit.PerMonth]: 'μήνα',
+      [RateUnit.Sale]:     'πώληση',
+    };
+    return map[r] ?? '—';
   }
 
   statusLabel(s: AssetStatus): string {
     const map: Record<number, string> = {
-      [AssetStatus.Available]: 'Διαθέσιμο',
-      [AssetStatus.Rented]: 'Ενοικιασμένο',
+      [AssetStatus.Available]:        'Διαθέσιμο',
+      [AssetStatus.Rented]:           'Ενοικιασμένο',
       [AssetStatus.UnderMaintenance]: 'Συντήρηση',
-      [AssetStatus.Damaged]: 'Κατεστραμμένο',
+      [AssetStatus.Damaged]:          'Κατεστραμμένο',
     };
     return map[s] ?? '—';
   }
 
   statusBadgeClass(s: AssetStatus): string {
     const map: Record<number, string> = {
-      [AssetStatus.Available]: 'badge-success',
-      [AssetStatus.Rented]: 'badge-warning',
+      [AssetStatus.Available]:        'badge-success',
+      [AssetStatus.Rented]:           'badge-warning',
       [AssetStatus.UnderMaintenance]: 'badge-info',
-      [AssetStatus.Damaged]: 'badge-error',
+      [AssetStatus.Damaged]:          'badge-error',
     };
     return `badge ${map[s] ?? ''}`;
   }
@@ -92,24 +98,5 @@ export class AssetDetail implements OnInit {
     return String(val);
   }
 
-  saveMaintenance() {
-    if (this.maintForm.invalid) { this.maintForm.markAllAsTouched(); return; }
-    this.maintSaving.set(true);
-    this.maintError.set('');
-    const dto: CostAssetHistCreateDto = {
-      date: new Date(this.mf['date'].value!).toISOString(),
-      description: this.mf['description'].value!,
-      cost: +this.mf['cost'].value!,
-      maintainedBy: this.mf['maintainedBy'].value || undefined,
-    };
-    this.service.addMaintenanceRecord(this.assetId, dto).subscribe({
-      next: (record) => {
-        this.maintenanceHistory.update(h => [record, ...h]);
-        this.showAddMaint.set(false);
-        this.maintForm.reset({ date: new Date().toISOString().substring(0, 10), cost: 0 });
-        this.maintSaving.set(false);
-      },
-      error: () => { this.maintError.set('Σφάλμα αποθήκευσης.'); this.maintSaving.set(false); }
-    });
-  }
+  
 }

@@ -1,0 +1,225 @@
+<div class="card bg-base-100 shadow-sm border border-base-200">
+  <div class="card-body p-6">
+
+    <!-- Header / toggle -->
+    <div class="flex items-center justify-between cursor-pointer select-none" (click)="toggle()">
+      <h3 class="text-sm font-semibold text-base-content/50 uppercase tracking-widest">Ιστορικό Συντηρήσεων</h3>
+      <div class="flex items-center gap-3">
+        @if (metadata(); as m) {
+          <span class="badge badge-ghost badge-sm">{{ m.totalCount }}</span>
+        }
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+             stroke="currentColor" class="size-4 text-base-content/40 transition-transform duration-200"
+             [class.rotate-180]="isOpen()">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+        </svg>
+      </div>
+    </div>
+
+    @if (isOpen()) {
+
+      <!-- Error -->
+      @if (error()) {
+        <div role="alert" class="alert alert-error mt-4 py-2 text-sm">
+          <span>{{ error() }}</span>
+        </div>
+      }
+
+      <!-- Add button -->
+      @if (!showAddForm()) {
+        <div class="flex justify-end mt-4">
+          <button type="button" class="btn btn-sm btn-outline btn-primary gap-1.5"
+                  (click)="showAddForm.set(true); cancelEdit(); $event.stopPropagation()">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                 stroke-width="1.5" stroke="currentColor" class="size-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Νέα Εγγραφή
+          </button>
+        </div>
+      }
+
+      <!-- Add form -->
+      @if (showAddForm()) {
+        <div class="border border-primary/40 rounded-xl p-4 mt-3 bg-base-50" [formGroup]="form">
+          <p class="text-xs font-semibold text-primary/70 uppercase tracking-widest mb-3">Νέα Εγγραφή Συντήρησης</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+            <label class="form-control w-full">
+              <div class="label pb-1"><span class="label-text text-sm font-medium">Ημερομηνία <span class="text-error">*</span></span></div>
+              <input type="date" formControlName="date" class="input input-bordered input-sm w-full"
+                [class.input-error]="f['date'].invalid && f['date'].touched" />
+            </label>
+
+            <label class="form-control w-full">
+              <div class="label pb-1"><span class="label-text text-sm font-medium">Κόστος (€) <span class="text-error">*</span></span></div>
+              <input type="number" formControlName="cost" min="0" step="0.01" placeholder="0.00"
+                class="input input-bordered input-sm w-full"
+                [class.input-error]="f['cost'].invalid && f['cost'].touched" />
+            </label>
+
+            <label class="form-control w-full sm:col-span-2">
+              <div class="label pb-1"><span class="label-text text-sm font-medium">Περιγραφή <span class="text-error">*</span></span></div>
+              <input type="text" formControlName="description" placeholder="π.χ. Αντικατάσταση ελαστικών"
+                class="input input-bordered input-sm w-full"
+                [class.input-error]="f['description'].invalid && f['description'].touched" />
+            </label>
+
+            <label class="form-control w-full sm:col-span-2">
+              <div class="label pb-1"><span class="label-text text-sm font-medium">Τεχνικός</span></div>
+              <input type="text" formControlName="maintainedBy" placeholder="Όνομα τεχνικού"
+                class="input input-bordered input-sm w-full" />
+            </label>
+
+          </div>
+          <div class="flex gap-2 justify-end mt-4">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="showAddForm.set(false)">Ακύρωση</button>
+            <button type="button" class="btn btn-primary btn-sm gap-1.5" (click)="save()" [disabled]="saving()">
+              @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
+              Αποθήκευση
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Loading -->
+      @if (loading()) {
+        <div class="flex justify-center py-6 mt-3">
+          <span class="loading loading-spinner loading-md text-primary"></span>
+        </div>
+      } @else {
+
+        <!-- Empty state -->
+        @if (records().length === 0 && !showAddForm()) {
+          <div class="text-center py-8 text-base-content/40 mt-2">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                 stroke="currentColor" class="size-10 mx-auto mb-2 opacity-30">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+            </svg>
+            <p class="text-sm">Δεν υπάρχουν εγγραφές συντήρησης.</p>
+          </div>
+        }
+
+        <!-- Records -->
+        <div class="space-y-3 mt-3">
+          @for (h of records(); track h.id) {
+
+            @if (editingId() === h.id) {
+              <!-- Inline edit form -->
+              <div class="border border-warning/50 rounded-xl p-4 bg-base-50" [formGroup]="editForm">
+                <p class="text-xs font-semibold text-warning/70 uppercase tracking-widest mb-3">Επεξεργασία Εγγραφής</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                  <label class="form-control w-full">
+                    <div class="label pb-1"><span class="label-text text-sm font-medium">Ημερομηνία <span class="text-error">*</span></span></div>
+                    <input type="date" formControlName="date" class="input input-bordered input-sm w-full"
+                      [class.input-error]="ef['date'].invalid && ef['date'].touched" />
+                  </label>
+
+                  <label class="form-control w-full">
+                    <div class="label pb-1"><span class="label-text text-sm font-medium">Κόστος (€) <span class="text-error">*</span></span></div>
+                    <input type="number" formControlName="cost" min="0" step="0.01"
+                      class="input input-bordered input-sm w-full"
+                      [class.input-error]="ef['cost'].invalid && ef['cost'].touched" />
+                  </label>
+
+                  <label class="form-control w-full sm:col-span-2">
+                    <div class="label pb-1"><span class="label-text text-sm font-medium">Περιγραφή <span class="text-error">*</span></span></div>
+                    <input type="text" formControlName="description"
+                      class="input input-bordered input-sm w-full"
+                      [class.input-error]="ef['description'].invalid && ef['description'].touched" />
+                  </label>
+
+                  <label class="form-control w-full sm:col-span-2">
+                    <div class="label pb-1"><span class="label-text text-sm font-medium">Τεχνικός</span></div>
+                    <input type="text" formControlName="maintainedBy"
+                      class="input input-bordered input-sm w-full" />
+                  </label>
+
+                </div>
+                <div class="flex gap-2 justify-end mt-4">
+                  <button type="button" class="btn btn-ghost btn-sm" (click)="cancelEdit()">Ακύρωση</button>
+                  <button type="button" class="btn btn-warning btn-sm gap-1.5" (click)="saveEdit(h.id)" [disabled]="saving()">
+                    @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
+                    Αποθήκευση
+                  </button>
+                </div>
+              </div>
+
+            } @else {
+              <!-- Record row -->
+              <div class="flex items-start gap-3 p-3 border border-base-200 rounded-xl group">
+                <div class="w-9 h-9 rounded-full bg-warning/10 text-warning flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                       stroke-width="1.5" stroke="currentColor" class="size-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.652 2.652 0 0 0 21 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 1 1-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 0 0 4.486-6.336l-3.276 3.277a3.004 3.004 0 0 1-2.25-2.25l3.276-3.276a4.5 4.5 0 0 0-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437 1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008Z" />
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <p class="font-medium text-sm">{{ h.description }}</p>
+                    <div class="flex items-center gap-2 shrink-0">
+                      <span class="font-mono text-sm font-semibold text-error">
+                        {{ h.cost | currency:'EUR':'symbol':'1.2-2':'el' }}
+                      </span>
+                      <!-- Edit button -->
+                      <button type="button"
+                              class="btn btn-ghost btn-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Επεξεργασία"
+                              (click)="startEdit(h)">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor" class="size-3.5">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+                        </svg>
+                      </button>
+                      <!-- Delete button -->
+                      <button type="button"
+                              class="btn btn-ghost btn-xs text-error opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Διαγραφή"
+                              [disabled]="deleting() === h.id"
+                              (click)="confirmDelete(h.id)">
+                        @if (deleting() === h.id) {
+                          <span class="loading loading-spinner loading-xs"></span>
+                        } @else {
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                               stroke-width="1.5" stroke="currentColor" class="size-3.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                          </svg>
+                        }
+                      </button>
+                    </div>
+                  </div>
+                  <div class="flex gap-4 mt-0.5 text-xs text-base-content/50">
+                    <span>{{ h.date | date:'dd/MM/yyyy' }}</span>
+                    @if (h.maintainedBy) { <span>Τεχνικός: {{ h.maintainedBy }}</span> }
+                  </div>
+                </div>
+              </div>
+            }
+
+          }
+        </div>
+
+        <!-- Pagination -->
+        @if (metadata(); as m) {
+          @if (m.totalPages > 1) {
+            <div class="flex items-center justify-between mt-4 pt-3 border-t border-base-200">
+              <p class="text-xs text-base-content/40">
+                {{ (m.currentPage - 1) * m.pageSize + 1 }}–{{ m.currentPage * m.pageSize > m.totalCount ? m.totalCount : m.currentPage * m.pageSize }} από {{ m.totalCount }}
+              </p>
+              <div class="join">
+                <button class="join-item btn btn-xs" [disabled]="m.currentPage === 1" (click)="goTo(m.currentPage - 1)">«</button>
+                @for (p of pages; track p) {
+                  <button class="join-item btn btn-xs" [class.btn-active]="p === m.currentPage" (click)="goTo(p)">{{ p }}</button>
+                }
+                <button class="join-item btn btn-xs" [disabled]="m.currentPage === m.totalPages" (click)="goTo(m.currentPage + 1)">»</button>
+              </div>
+            </div>
+          }
+        }
+
+      }
+    }
+
+  </div>
+</div>

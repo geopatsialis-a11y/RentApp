@@ -21,15 +21,15 @@ public class Asset: BaseEntity
     [MaxLength(500)]
     public string? Notes { get; set; }
     
-    public AcquisitionType AcquisitionType { get; set; }
+    public RateUnit RateUnit { get; set; } = RateUnit.PerDay;
     
     [Column(TypeName = "decimal(18,2)")]
-    public decimal AcquisitionCost { get; set; }
-    
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal? MonthlyLeaseCost { get; set; }
+    public decimal Cost { get; set; }
+
 
     public AssetStatus Status { get; set; } = AssetStatus.Available;
+
+    public string? PhotoUrl { get; set; }
 
     // Εδώ θα αποθηκεύεται όλο το EAV σε JSON μορφή για να μην κάνεις JOINs στα Views
     public JsonDocument? PropertiesJson { get; set; }
@@ -49,4 +49,7 @@ public class Asset: BaseEntity
     public ICollection<ContractAsset> ContractAssets { get; set; } = new List<ContractAsset>();
     [JsonIgnore]
     public ICollection<CostAssetHist> MaintenanceHistory { get; set; } = new List<CostAssetHist>();
+    
+    [JsonIgnore]
+    public List<Photo> Photos { get; set; } = new List<Photo>();
 }

@@ -28,7 +28,7 @@ public interface IAssetService
  
     // ---------------- Asset (data) CRUD ----------------
     Task<PaginatedResult<AssetDto>> GetAllAsync(PagingParams pagingParams, Guid? assetTypeId, AssetStatus? status);
-    Task<AssetDto?> GetByIdAsync(Guid id);
+    Task<AssetDetailDto> GetByIdAsync(Guid id);
     Task<List<AssetLookupDto>> GetLookupAsync(string? search, Guid? assetTypeId);
     Task<AssetDto> CreateAsync(AssetCreateDto dto, string currentUserId);
     Task<AssetDto> UpdateAsync(Guid id, AssetUpdateDto dto, string currentUserId);
@@ -40,7 +40,21 @@ public interface IAssetService
     Task<PaginatedResult<AssetDto>> SearchAsync(AssetSearchRequest request);
  
     // ---------------- Maintenance history ----------------
-    Task<List<CostAssetHistDto>> GetMaintenanceHistoryAsync(Guid assetId);
+    Task<PaginatedResult<CostAssetHistDto>> GetMaintenanceHistoryAsync(Guid assetId, PagingParams pagingParams);
     Task<CostAssetHistDto> AddMaintenanceRecordAsync(Guid assetId, CostAssetHistCreateDto dto, string currentUserId);
+    Task<CostAssetHistDto> UpdateMaintenanceRecordAsync(Guid assetId, Guid recordId, CostAssetHistUpdateDto dto, string currentUserId);
+   
+    Task DeleteMaintenanceRecordAsync(Guid assetId, Guid recordId, string currentUserId);
+    
+
+    // ---------------- Contract history (per asset) ----------------
+    Task<PaginatedResult<AssetContractHistDto>> GetContractHistoryAsync(Guid assetId, PagingParams pagingParams);
+
+
+    
+    // ---------------- Photos ----------------
+    Task<PhotoDto> AddPhotoAsync(Guid assetId, IFormFile file, string currentUserId);
+    Task DeletePhotoAsync(Guid assetId, Guid photoId, string currentUserId);
+    Task<AssetDetailDto> SetMainPhotoAsync(Guid assetId, Guid photoId, string currentUserId);
 }
  

@@ -62,6 +62,13 @@ public partial class AssetRepository
             parameters.Add(new NpgsqlParameter("status", (int)request.Status.Value));
         }
 
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            sql.Append(@" AND LOWER(""Name"") LIKE @search");
+            parameters.Add(new NpgsqlParameter("search", $"%{request.Search.Trim().ToLower()}%"));
+        }
+
+
         var paramIndex = 0;
         foreach (var filter in request.Filters)
         {
@@ -117,7 +124,16 @@ public partial class AssetRepository
         var totalCount = await ExecuteScalarCountAsync(countSql, parameters);
 
         // ---- paged rows ----
-        sql.Append(@" ORDER BY ""CreatedAt"" DESC");
+        var orderClause = request.SortBy switch
+        {
+            "name_asc"  => @" ORDER BY ""Name"" ASC",
+            "name_desc" => @" ORDER BY ""Name"" DESC",
+            "cost_asc"  => @" ORDER BY ""AcquisitionCost"" ASC",
+            "cost_desc" => @" ORDER BY ""AcquisitionCost"" DESC",
+            "date_asc"  => @" ORDER BY ""CreatedAt"" ASC",
+            _           => @" ORDER BY ""CreatedAt"" DESC"
+        };
+        sql.Append(orderClause);
         sql.Append(@" OFFSET @offset LIMIT @limit");
         parameters.Add(new NpgsqlParameter("offset", (request.Page - 1) * request.PageSize));
         parameters.Add(new NpgsqlParameter("limit", request.PageSize));

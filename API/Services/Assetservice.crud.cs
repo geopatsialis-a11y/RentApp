@@ -14,7 +14,7 @@ namespace API.Services;
     public Task<PaginatedResult<AssetDto>> GetAllAsync(PagingParams pagingParams, Guid? assetTypeId, AssetStatus? status)
         => unitOfWork.AssetRepository.GetAllAsync(pagingParams, assetTypeId, status);
 
-    public Task<AssetDto?> GetByIdAsync(Guid id)
+    public Task<AssetDetailDto?> GetByIdAsync(Guid id)
         => unitOfWork.AssetRepository.GetByIdAsync(id);
 
     public Task<List<AssetLookupDto>> GetLookupAsync(string? search, Guid? assetTypeId)
@@ -31,13 +31,12 @@ namespace API.Services;
         {
             TenantId = tenantProvider.TenantId,
             AssetTypeId = dto.AssetTypeId,
-            Name = dto.Name,
-            Notes = dto.Notes,
-            AcquisitionType = dto.AcquisitionType,
-            AcquisitionCost = dto.AcquisitionCost,
-            MonthlyLeaseCost = dto.MonthlyLeaseCost,
-            Status = AssetStatus.Available,
-            CreatedBy = currentUserId
+            Name        = dto.Name,
+            Notes       = dto.Notes,
+            RateUnit    = dto.RateUnit,
+            Cost        = dto.Cost,
+            Status      = AssetStatus.Available,
+            CreatedBy   = currentUserId
         };
 
         await unitOfWork.AssetRepository.AddAsync(asset);
@@ -82,9 +81,8 @@ namespace API.Services;
 
         asset.Name = dto.Name;
         asset.Notes = dto.Notes;
-        asset.AcquisitionType = dto.AcquisitionType;
-        asset.AcquisitionCost = dto.AcquisitionCost;
-        asset.MonthlyLeaseCost = dto.MonthlyLeaseCost;
+        asset.RateUnit = dto.RateUnit;
+        asset.Cost     = dto.Cost;
         asset.UpdatedAt = DateTime.UtcNow;
         asset.UpdatedBy = currentUserId;
 
@@ -133,48 +131,131 @@ namespace API.Services;
 
     public async Task<PaginatedResult<AssetDto>> SearchAsync(AssetSearchRequest request)
     {
-        var schema = await unitOfWork.AssetRepository.GetFieldsForTypeAsync(request.AssetTypeId);
-        if (schema.Count == 0)
-            throw new NotFoundException($"Asset category '{request.AssetTypeId}' was not found or has no fields.");
-
-        var schemaByName = schema.ToDictionary(f => f.Name);
-
-        foreach (var filter in request.Filters)
+         if (request.Filters.Count > 0)
         {
-            if (!schemaByName.TryGetValue(filter.FieldName, out var field))
-                throw new BadRequestException(
-                    $"'{filter.FieldName}' is not a valid filter field for this asset category.");
+             var schema = await unitOfWork.AssetRepository.GetFieldsForTypeAsync(request.AssetTypeId);
+            var schemaByName = schema.ToDictionary(f => f.Name);
+                     foreach (var filter in request.Filters)
+            {
+                if (!schemaByName.TryGetValue(filter.FieldName, out var field))
+                    throw new BadRequestException( $"'{filter.FieldName}' is not a valid filter field for this asset category.");
 
-            // Range filters only make sense for Number/Date fields; reject a
-            // mismatched combination early rather than silently no-op-ing it
-            // in the SQL (e.g. casting a Text column to ::numeric would 500).
-            var isRangeFilter = filter.MinValue.HasValue || filter.MaxValue.HasValue
-                              || filter.MinDate.HasValue || filter.MaxDate.HasValue;
+                var isRangeFilter = filter.MinValue.HasValue || filter.MaxValue.HasValue
+                                  || filter.MinDate.HasValue || filter.MaxDate.HasValue;
 
-            if (isRangeFilter && field.DataType is not (FieldDataType.Number or FieldDataType.Date or FieldDataType.DateTime))
-                throw new BadRequestException($"Field '{field.Label}' does not support range filtering.");
+                if (isRangeFilter && field.DataType is not (FieldDataType.Number or FieldDataType.Date or FieldDataType.DateTime))
+                    throw new BadRequestException($"Field '{field.Label}' does not support range filtering.");
+            }
         }
 
         return await unitOfWork.AssetRepository.SearchAsync(request);
+
     }
 
     // ==================================================================
     //  MAINTENANCE HISTORY
     // ==================================================================
+    public async Task<PaginatedResult<CostAssetHistDto>> GetMaintenanceHistoryAsync(Guid assetId, PagingParams pagingParams)
+        => await unitOfWork.AssetRepository.GetMaintenanceHistoryAsync(assetId, pagingParams);
 
-    public async Task<List<CostAssetHistDto>> GetMaintenanceHistoryAsync(Guid assetId)
+    public async Task<PaginatedResult<AssetContractHistDto>> GetContractHistoryAsync(Guid assetId, PagingParams pagingParams)
+        => await unitOfWork.AssetRepository.GetContractHistoryAsync(assetId, pagingParams);
+
+    // ==================================================================
+    //  PHOTOS
+    // ==================================================================
+
+    public async Task<PhotoDto> AddPhotoAsync(Guid assetId, IFormFile file, string currentUserId)
     {
-        var history = await unitOfWork.AssetRepository.GetMaintenanceHistoryAsync(assetId);
-        return history.Select(h => new CostAssetHistDto
+        var asset = await unitOfWork.AssetRepository.GetEntityByIdAsync(assetId)
+            ?? throw new NotFoundException($"Asset '{assetId}' was not found.");
+
+        var uploadResult = await photoService.AddPhotoAsync(file);
+
+        var isFirst = !await unitOfWork.AssetRepository.HasPhotosAsync(assetId);
+
+        var photo = new Photo
         {
-            Id = h.Id,
-            Date = h.Date,
-            Description = h.Description,
-            Cost = h.Cost,
-            MaintainedBy = h.MaintainedBy
-        }).ToList();
+            TenantId = asset.TenantId,
+            Url = uploadResult.Url,
+            PublicId = uploadResult.PublicId,
+            IsMain = isFirst,
+            AssetId = assetId
+        };
+
+        await unitOfWork.AssetRepository.AddPhotoAsync(photo);
+
+        if (isFirst)
+        {
+            asset.PhotoUrl = uploadResult.Url;
+            unitOfWork.AssetRepository.Update(asset);
+        }
+
+        await unitOfWork.Complete();
+
+        return new PhotoDto { Id = photo.Id, Url = photo.Url, IsMain = photo.IsMain };
     }
 
+    public async Task DeletePhotoAsync(Guid assetId, Guid photoId, string currentUserId)
+    {
+        var asset = await unitOfWork.AssetRepository.GetEntityByIdAsync(assetId)
+            ?? throw new NotFoundException($"Asset '{assetId}' was not found.");
+
+        var photo = await unitOfWork.AssetRepository.GetPhotoByIdAsync(photoId)
+            ?? throw new NotFoundException($"Photo '{photoId}' was not found.");
+
+        if (photo.AssetId != assetId)
+            throw new BadRequestException("Photo does not belong to this asset.");
+
+        if (photo.PublicId is not null)
+            await photoService.DeletePhotoAsync(photo.PublicId);
+
+        var wasMain = photo.IsMain;
+        unitOfWork.AssetRepository.RemovePhoto(photo);
+
+        if (wasMain)
+        {
+            asset.PhotoUrl = null;
+            unitOfWork.AssetRepository.Update(asset);
+        }
+
+        await unitOfWork.Complete();
+
+        if (wasMain)
+        {
+            var next = await unitOfWork.AssetRepository.GetFirstPhotoAsync(assetId);
+            if (next is not null)
+            {
+                next.IsMain = true;
+                asset.PhotoUrl = next.Url;
+                unitOfWork.AssetRepository.Update(asset);
+                await unitOfWork.Complete();
+            }
+        }
+    }
+
+    public async Task<AssetDetailDto> SetMainPhotoAsync(Guid assetId, Guid photoId, string currentUserId)
+    {
+        var asset = await unitOfWork.AssetRepository.GetEntityByIdAsync(assetId)
+            ?? throw new NotFoundException($"Asset '{assetId}' was not found.");
+
+        var photos = await unitOfWork.AssetRepository.GetPhotosAsync(assetId);
+        var newMain = photos.FirstOrDefault(p => p.Id == photoId)
+            ?? throw new NotFoundException($"Photo '{photoId}' was not found on this asset.");
+
+        foreach (var p in photos)
+            p.IsMain = p.Id == photoId;
+
+        asset.PhotoUrl = newMain.Url;
+        unitOfWork.AssetRepository.Update(asset);
+
+        await unitOfWork.Complete();
+
+        return (await unitOfWork.AssetRepository.GetByIdAsync(assetId))!;
+    }
+
+
+    //CostAssetHist
     public async Task<CostAssetHistDto> AddMaintenanceRecordAsync(Guid assetId, CostAssetHistCreateDto dto, string currentUserId)
     {
         var asset = await unitOfWork.AssetRepository.GetEntityByIdAsync(assetId)
@@ -206,4 +287,47 @@ namespace API.Services;
             MaintainedBy = record.MaintainedBy
         };
     }
+
+    
+    public async Task<CostAssetHistDto> UpdateMaintenanceRecordAsync(Guid assetId, Guid recordId, CostAssetHistUpdateDto dto, string currentUserId)
+    {
+        var record = await unitOfWork.AssetRepository.GetMaintenanceRecordByIdAsync(recordId)
+            ?? throw new NotFoundException($"Maintenance record '{recordId}' was not found.");
+
+        if (record.AssetId != assetId)
+            throw new NotFoundException($"Maintenance record '{recordId}' does not belong to this asset.");
+
+        record.Date         = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc);
+        record.Description  = dto.Description;
+        record.Cost         = dto.Cost;
+        record.MaintainedBy = dto.MaintainedBy;
+        record.UpdatedBy    = currentUserId;
+
+        unitOfWork.AssetRepository.UpdateMaintenanceRecord(record);
+        await unitOfWork.Complete();
+
+        return new CostAssetHistDto
+        {
+            Id           = record.Id,
+            Date         = record.Date,
+            Description  = record.Description,
+            Cost         = record.Cost,
+            MaintainedBy = record.MaintainedBy
+        };
+    }
+
+    public async Task DeleteMaintenanceRecordAsync(Guid assetId, Guid recordId, string currentUserId)
+     {
+        var record = await unitOfWork.AssetRepository.GetMaintenanceRecordByIdAsync(recordId)
+            ?? throw new NotFoundException($"Maintenance record '{recordId}' was not found.");
+
+        if (record.AssetId != assetId)
+            throw new NotFoundException($"Maintenance record '{recordId}' does not belong to this asset.");
+
+        record.DeletedBy = currentUserId;
+        unitOfWork.AssetRepository.RemoveMaintenanceRecord(record);
+        await unitOfWork.Complete();
+    }
+
+    
 }

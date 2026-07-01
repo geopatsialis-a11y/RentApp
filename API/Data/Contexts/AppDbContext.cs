@@ -1,18 +1,21 @@
 using System.Linq.Expressions;
+using System.Text.Json;
 using API.Entities;
 using API.Interfaces;
+using API.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Data.Contexts;
 
-public class AppDbContext(  DbContextOptions<AppDbContext> options,
-                            ITenantProvider tenantProvider
-                        ): IdentityDbContext<AppUser>(options)
+public class AppDbContext(
+    DbContextOptions<AppDbContext> options,
+    ITenantProvider tenantProvider,
+    AuditChannel auditChannel
+) : IdentityDbContext<AppUser>(options)
 {
-protected Guid CurrentTenantId => tenantProvider.TenantId; // Ιδανικά αυτό γίνεται inject μέσω κάποιου ITenantService
-
+    protected Guid CurrentTenantId => tenantProvider.TenantId; 
     public DbSet<Asset> Assets { get; set; }
     public DbSet<AssetAttributeValue> AssetAttributeValues { get; set; }
     public DbSet<AssetType> AssetTypes { get; set; }
@@ -29,6 +32,7 @@ protected Guid CurrentTenantId => tenantProvider.TenantId; // Ιδανικά α�
     public DbSet<Member> Members { get; set; }
     public DbSet<MemberInvite> MemberInvites { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<Photo> Photos { get; set; }
    public DbSet<Tenant> Tenants { get; set; }
    
     protected override void OnModelCreating(ModelBuilder builder)
@@ -165,10 +169,83 @@ protected Guid CurrentTenantId => tenantProvider.TenantId; // Ιδανικά α�
         // Index για JSONB (PostgreSQL)
         builder.Entity<Asset>()
             .HasIndex(a => a.PropertiesJson, "idx_asset_properties_jsonb")
-            .HasMethod("GIN"); 
+            .HasMethod("GIN");
+
+        // Photo: 1 Asset → N Photos
+        builder.Entity<Photo>()
+            .HasOne(p => p.Asset)
+            .WithMany(a => a.Photos)
+            .HasForeignKey(p => p.AssetId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Photo>()
+            .HasIndex(p => p.AssetId);
     }
 
     
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        var logs = BuildAuditEntries();
+        var result = await base.SaveChangesAsync(cancellationToken);
+        foreach (var log in logs)
+            auditChannel.Writer.TryWrite(log);
+        return result;
+    }
+
+    private List<AuditLog> BuildAuditEntries()
+    {
+        var logs = new List<AuditLog>();
+
+        foreach (var entry in ChangeTracker.Entries<BaseEntity>())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
+                continue;
+
+            var action = entry.State switch
+            {
+                EntityState.Added    => "Insert",
+                EntityState.Modified => "Update",
+                _                    => "Delete"
+            };
+
+            var userId = entry.State switch
+            {
+                EntityState.Added    => entry.Entity.CreatedBy,
+                EntityState.Modified => entry.Entity.UpdatedBy,
+                _                    => entry.Entity.DeletedBy
+            };
+
+            var oldValues = entry.State != EntityState.Added
+                ? SerializeProps(entry.OriginalValues)
+                : null;
+
+            var newValues = entry.State != EntityState.Deleted
+                ? SerializeProps(entry.CurrentValues)
+                : null;
+
+            logs.Add(new AuditLog
+            {
+                TenantId  = entry.Entity.TenantId,
+                TableName = entry.Metadata.GetTableName() ?? entry.Metadata.ClrType.Name,
+                RecordId  = entry.Entity.Id.ToString(),
+                Action    = action,
+                OldValues = oldValues,
+                NewValues = newValues,
+                UserId    = userId,
+            });
+        }
+
+        return logs;
+    }
+
+    private static string SerializeProps(Microsoft.EntityFrameworkCore.ChangeTracking.PropertyValues values)
+    {
+        var dict = values.Properties
+            .ToDictionary(p => p.Name, p => values[p]?.ToString());
+        return JsonSerializer.Serialize(dict);
+    }
+
 
     // Helper method για την κατασκευή δυναμικών lambda expressions στα Query Filters
     private LambdaExpression ConvertFilterExpression<TInterface>(

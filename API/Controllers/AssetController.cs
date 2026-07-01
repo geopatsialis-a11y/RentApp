@@ -37,7 +37,7 @@ public class AssetController(IAssetService assetService) : BaseApiController
 
     // GET api/asset/{id}
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<AssetDto>> GetById(Guid id)
+    public async Task<ActionResult<AssetDetailDto>> GetById(Guid id)
     {
         var asset = await assetService.GetByIdAsync(id);
         return asset == null ? NotFound() : Ok(asset);
@@ -169,15 +169,67 @@ public class AssetController(IAssetService assetService) : BaseApiController
         }
     }
 
+        // ----------------------------------------------------------------
+    //  Photos (sub-resource)
+    // ----------------------------------------------------------------
+
+    // POST api/asset/{id}/photos
+    [HttpPost("{id:guid}/photos")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<PhotoDto>> AddPhoto(Guid id, IFormFile file)
+    {
+        try
+        {
+            var photo = await assetService.AddPhotoAsync(id, file, User.GetMemberId().ToString());
+            return Ok(photo);
+        }
+        catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
+    // DELETE api/asset/{id}/photos/{photoId}
+    [HttpDelete("{id:guid}/photos/{photoId:guid}")]
+    public async Task<IActionResult> DeletePhoto(Guid id, Guid photoId)
+    {
+        try
+        {
+            await assetService.DeletePhotoAsync(id, photoId, User.GetMemberId().ToString());
+            return NoContent();
+        }
+        catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
+    // PATCH api/asset/{id}/photos/{photoId}/main
+    [HttpPatch("{id:guid}/photos/{photoId:guid}/main")]
+    public async Task<ActionResult<AssetDetailDto>> SetMainPhoto(Guid id, Guid photoId)
+    {
+        try
+        {
+            var asset = await assetService.SetMainPhotoAsync(id, photoId, User.GetMemberId().ToString());
+            return Ok(asset);
+        }
+        catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
     // ----------------------------------------------------------------
     //  Maintenance / cost history (sub-resource)
     // ----------------------------------------------------------------
 
     // GET api/asset/{id}/maintenance-history
     [HttpGet("{id:guid}/maintenance-history")]
-    public async Task<IActionResult> GetMaintenanceHistory(Guid id)
+       public async Task<IActionResult> GetMaintenanceHistory(Guid id, [FromQuery] PagingParams pagingParams)
+       {
+        var history = await assetService.GetMaintenanceHistoryAsync(id, pagingParams);
+        return Ok(history);
+    }
+
+    // GET api/asset/{id}/contracts?page=1&pageSize=5
+    [HttpGet("{id:guid}/contracts")]
+    public async Task<IActionResult> GetContractHistory(Guid id, [FromQuery] PagingParams pagingParams)
     {
-        var history = await assetService.GetMaintenanceHistoryAsync(id);
+        var history = await assetService.GetContractHistoryAsync(id, pagingParams);
         return Ok(history);
     }
 
@@ -191,6 +243,39 @@ public class AssetController(IAssetService assetService) : BaseApiController
         {
             var record = await assetService.AddMaintenanceRecordAsync(id, dto, User.GetMemberId().ToString());
             return Ok(record);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    
+    // PUT api/asset/{id}/maintenance-history/{recordId}
+    [HttpPut("{id:guid}/maintenance-history/{recordId:guid}")]
+    public async Task<IActionResult> UpdateMaintenanceRecord(Guid id, Guid recordId, CostAssetHistUpdateDto dto)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        try
+        {
+            var record = await assetService.UpdateMaintenanceRecordAsync(id, recordId, dto, User.GetMemberId().ToString());
+            return Ok(record);
+        }
+        catch (NotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    // DELETE api/asset/{id}/maintenance-history/{recordId}
+    [HttpDelete("{id:guid}/maintenance-history/{recordId:guid}")]
+    public async Task<IActionResult> DeleteMaintenanceRecord(Guid id, Guid recordId)
+    {
+        try
+        {
+            await assetService.DeleteMaintenanceRecordAsync(id, recordId, User.GetMemberId().ToString());
+            return NoContent();
         }
         catch (NotFoundException ex)
         {

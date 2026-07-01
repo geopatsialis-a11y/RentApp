@@ -13,8 +13,13 @@ public class AssetSearchRequest
 {
     public required Guid AssetTypeId { get; set; }
     public AssetStatus? Status { get; set; }
+    
+    public string? Search { get; set; }
+
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 20;
+
+    public string? SortBy { get; set; }
  
     // One entry per filtered field. All entries are combined with AND.
     public List<AssetAttributeFilter> Filters { get; set; } = new();

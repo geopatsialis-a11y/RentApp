@@ -15,5 +15,8 @@ public class PagingParams
     }
 
     public string? Search { get; set; }
+
+    // name_asc | name_desc | cost_asc | cost_desc | date_asc | date_desc
+    public string? SortBy { get; set; }
 }
 

@@ -40,7 +40,7 @@ public interface IAssetRepository
     // ---------------- Asset (data) ----------------
     Task<PaginatedResult<AssetDto>> GetAllAsync(PagingParams pagingParams, Guid? assetTypeId, Enums.AssetStatus? status);
     Task<PaginatedResult<AssetDto>> SearchAsync(AssetSearchRequest request);
-    Task<AssetDto?> GetByIdAsync(Guid id);
+    Task<AssetDetailDto?> GetByIdAsync(Guid id);
     Task<List<AssetLookupDto>> GetLookupAsync(string? search, Guid? assetTypeId);
     Task<Asset?> GetEntityByIdAsync(Guid id);
  
@@ -53,6 +53,21 @@ public interface IAssetRepository
     Task SetSingleAttributeValueAsync(Asset asset, AssetTypeField field, object? rawValue);
  
     // ---------------- CostAssetHist (maintenance) ----------------
-    Task<List<CostAssetHist>> GetMaintenanceHistoryAsync(Guid assetId);
+    Task<PaginatedResult<CostAssetHistDto>> GetMaintenanceHistoryAsync(Guid assetId, PagingParams pagingParams);
     Task AddMaintenanceRecordAsync(CostAssetHist record);
+    Task<CostAssetHist?> GetMaintenanceRecordByIdAsync(Guid recordId);
+    void UpdateMaintenanceRecord(CostAssetHist record);
+    void RemoveMaintenanceRecord(CostAssetHist record);
+
+    // ---------------- Contract history (per asset) ----------------
+    Task<PaginatedResult<AssetContractHistDto>> GetContractHistoryAsync(Guid assetId, PagingParams pagingParams);
+
+
+    // ---------------- Photos ----------------
+    Task<bool> HasPhotosAsync(Guid assetId);
+    Task AddPhotoAsync(Photo photo);
+    Task<Photo?> GetPhotoByIdAsync(Guid photoId);
+    Task<Photo?> GetFirstPhotoAsync(Guid assetId);
+    Task<List<Photo>> GetPhotosAsync(Guid assetId);
+    void RemovePhoto(Photo photo);
 }

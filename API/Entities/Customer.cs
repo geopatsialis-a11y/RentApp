@@ -25,8 +25,7 @@ public class Customer : BaseEntity
     public string? Representative { get; set; }
 
     // Navigation Properties
-    [ForeignKey(nameof(TenantId))]
-    public  Tenant Tenant { get; set; } = null!;
+   
     public  ICollection<Contact> Contacts { get; set; } = new List<Contact>();
     public  ICollection<Contract> Contracts { get; set; } = new List<Contract>();
 }
