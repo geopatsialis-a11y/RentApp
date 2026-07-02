@@ -25,6 +25,7 @@ export class AssetForm implements OnInit {
 
   readonly RateUnit      = RateUnit;
   readonly FieldDataType = FieldDataType;
+  private rowVersion = 0;
   
   isEdit        = signal(false);
   loading       = signal(false);
@@ -61,6 +62,7 @@ export class AssetForm implements OnInit {
       this.isEdit.set(true);
       this.assetId = id;
       this.service.getById(id).subscribe((asset: AssetDetailDto) => {
+        this.rowVersion = asset.rowVersion ?? 0; 
         this.f['assetTypeId'].setValue(asset.assetTypeId);
         this.f['assetTypeId'].disable();
         this.f['name'].setValue(asset.name);
@@ -180,10 +182,11 @@ export class AssetForm implements OnInit {
 
     const req$ = this.isEdit()
       ? this.service.update(this.assetId!, {
-          name:       raw.name!,
-          notes:      raw.notes || undefined,
-          rateUnit:   +raw.rateUnit! as RateUnit,
-          cost:       +raw.cost!,
+          rowVersion:  this.rowVersion,              // ← ADD
+          name:        raw.name!,
+          notes:       raw.notes || undefined,
+          rateUnit:    +raw.rateUnit! as RateUnit,
+          cost:        +raw.cost!,
           attributes,
         } as AssetUpdateDto)
       : this.service.create({

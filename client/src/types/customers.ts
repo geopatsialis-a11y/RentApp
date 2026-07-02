@@ -8,6 +8,7 @@ export interface CustomerDto {
   isActive: boolean;
   createdAt: string;
   contacts: ContactDto[];
+  rowVersion?: number;  
 }
 
 export interface CreateCustomerDto {
@@ -25,6 +26,7 @@ export interface ContactDto {
   email?: string;
   canUseAsset: boolean;
   notes?: string;
+  rowVersion?: number;  
 }
 
 export interface CustomerStatsDto {
@@ -32,5 +34,15 @@ export interface CustomerStatsDto {
   active: number;
   inactive: number;
   newThisMonth: number;
+}
+
+
+export interface UpdateCustomerDto {  
+  rowVersion?: number;
+  name: string;
+  afm: string;
+  dou?: string;
+  address?: string;
+  representative?: string;
 }
 

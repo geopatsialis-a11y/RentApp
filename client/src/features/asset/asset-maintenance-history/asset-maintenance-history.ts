@@ -15,6 +15,7 @@ export class AssetMaintenanceHistory implements OnInit {
 
   private fb      = inject(FormBuilder);
   private service = inject(AssetService);
+  private editRowVersion = 0;
 
   isOpen      = signal(false);
   loading     = signal(false);
@@ -112,16 +113,16 @@ export class AssetMaintenanceHistory implements OnInit {
   // ── Edit ─────────────────────────────────────────────────────────────
 
   startEdit(record: CostAssetHistDto) {
-    this.showAddForm.set(false);
-    this.editingId.set(record.id);
-    this.editForm.reset({
-      date:         new Date(record.date).toISOString().substring(0, 10),
-      description:  record.description,
-      cost:         record.cost,
-      maintainedBy: record.maintainedBy ?? '',
-    });
-  }
-
+  this.showAddForm.set(false);
+  this.editingId.set(record.id);
+  this.editRowVersion = record.rowVersion ?? 0;   
+  this.editForm.reset({
+    date:         new Date(record.date).toISOString().substring(0, 10),
+    description:  record.description,
+    cost:         record.cost,
+    maintainedBy: record.maintainedBy ?? '',
+  });
+}
   cancelEdit() {
     this.editingId.set(null);
     this.error.set('');
@@ -132,6 +133,7 @@ export class AssetMaintenanceHistory implements OnInit {
     this.saving.set(true);
     this.error.set('');
     const dto: CostAssetHistUpdateDto = {
+      rowVersion:   this.editRowVersion,                   
       date:         new Date(this.ef['date'].value!).toISOString(),
       description:  this.ef['description'].value!,
       cost:         +this.ef['cost'].value!,
@@ -143,8 +145,8 @@ export class AssetMaintenanceHistory implements OnInit {
         this.editingId.set(null);
         this.saving.set(false);
       },
-      error: () => {
-        this.error.set('Σφάλμα αποθήκευσης.');
+      error: (err) => {
+        this.error.set(err.error?.message || 'Σφάλμα αποθήκευσης.');   // ← πρόσθεσε err param
         this.saving.set(false);
       }
     });

@@ -16,6 +16,8 @@ export class CustomerForm implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private service = inject(CustomerService);
+  private customerRowVersion = 0;
+  private contactRowVersion  = 0;
 
   // ── Customer form ──────────────────────────────────────────────────────
   isEdit   = signal(false);
@@ -56,8 +58,9 @@ export class CustomerForm implements OnInit {
     if (id) {
       this.isEdit.set(true);
       this.customerId = id;
-      this.service.getById(id).subscribe(c => {
-         this.form.patchValue({
+     this.service.getById(id).subscribe(c => {
+        this.customerRowVersion = c.rowVersion ?? 0;   // ← ADD
+        this.form.patchValue({
           name: c.name, afm: c.afm,
           dou: c.dou ?? '', address: c.address ?? '', representative: c.representative ?? '',
         });
@@ -73,7 +76,7 @@ export class CustomerForm implements OnInit {
     this.errorMsg.set('');
     const dto = this.form.value as any;
     const req = this.isEdit()
-      ? this.service.update(this.customerId!, dto)
+      ? this.service.update(this.customerId!, { ...dto, rowVersion: this.customerRowVersion })  // ← ADD rowVersion
       : this.service.create(dto);
     req.subscribe({
       next: (saved) => {
@@ -102,6 +105,7 @@ export class CustomerForm implements OnInit {
   startEditContact(c: ContactDto) {
     this.showAddContact.set(false);
     this.contactError.set('');
+    this.contactRowVersion = c.rowVersion ?? 0;   // ← ADD
     this.contactForm.patchValue({
       name: c.name, 
       phone: c.phone ?? '', email: c.email ?? '',
@@ -124,7 +128,7 @@ export class CustomerForm implements OnInit {
     const editId = this.editingContactId();
 
     if (editId) {
-      this.service.updateContact(this.customerId!, editId, dto).subscribe({
+      this.service.updateContact(this.customerId!, editId, { ...dto, rowVersion: this.contactRowVersion }).subscribe({  
         next: (updated) => {
           this.contacts.update(list => list.map(c => c.id === editId ? updated : c));
           this.editingContactId.set(null);

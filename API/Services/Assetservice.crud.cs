@@ -298,7 +298,8 @@ namespace API.Services;
             Date         = payment.PaymentDate,
             Description  = payment.Description ?? string.Empty,
             Cost         = payment.Amount,
-            MaintainedBy = payment.Notes
+            MaintainedBy = payment.Notes,
+            RowVersion   = payment.xmin
         };
     }
 
@@ -330,7 +331,8 @@ namespace API.Services;
             Date         = payment.PaymentDate,
             Description  = payment.Description ?? string.Empty,
             Cost         = payment.Amount,
-            MaintainedBy = payment.Notes
+            MaintainedBy = payment.Notes,
+            RowVersion   = payment.xmin
         };
     }
 

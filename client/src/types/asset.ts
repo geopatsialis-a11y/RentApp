@@ -55,6 +55,7 @@ export interface AssetDto {
   status: AssetStatus;
   createdAt: string;
   photoUrl?: string;
+  rowVersion?: number;  
   attributes: Record<string, unknown>;
 }
 
@@ -79,6 +80,7 @@ export interface AssetCreateDto {
 }
 
 export interface AssetUpdateDto {
+  rowVersion?: number;  
   name: string;
   notes?: string;
   rateUnit: RateUnit;
@@ -96,6 +98,7 @@ export interface CostAssetHistDto {
   description: string;
   cost: number;
   maintainedBy?: string;
+  rowVersion?: number;  
 }
 
 export interface CostAssetHistCreateDto {
@@ -111,6 +114,7 @@ export interface CostAssetHistUpdateDto {
   description: string;
   cost: number;
   maintainedBy?: string;
+  rowVersion?: number;
 }
 
 
@@ -122,6 +126,7 @@ export interface AssetContractHistDto {
   status: RentalStatus;
   totalAmount: number;
   notes?: string;
+  rowVersion?: number;  
 }
 
 
@@ -133,6 +138,7 @@ export interface AssetTypeCreateDto {
 export interface AssetTypeUpdateDto {
   name: string;
   description?: string;
+  rowVersion?: number;
 }
 
 export interface AssetTypeFieldOptionCreateDto {
@@ -145,6 +151,7 @@ export interface AssetTypeFieldOptionUpdateDto {
   label: string;
   value: string;
   displayOrder: number;
+  rowVersion?: number;  
 }
 
 export interface AssetTypeFieldCreateDto {
@@ -170,6 +177,7 @@ export interface AssetTypeFieldUpdateDto {
   minValue?: number;
   maxValue?: number;
   isRequired: boolean;
+  rowVersion?: number;  
 }
 
 

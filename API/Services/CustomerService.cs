@@ -115,7 +115,8 @@ public class CustomerService (IUnitOfWork uow, ITenantProvider tenantProvider): 
             Phone = contact.Phone,
             Email = contact.Email,
             CanUseAsset = contact.CanUseAsset,
-            Notes = contact.Notes
+            Notes = contact.Notes,
+            RowVersion = contact.xmin
         };
     }
  
