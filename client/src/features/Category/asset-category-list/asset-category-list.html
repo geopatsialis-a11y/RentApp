@@ -1,0 +1,149 @@
+<div class="max-w-3xl mx-auto space-y-5">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3">
+    <a routerLink="/assets" class="btn btn-ghost btn-sm btn-square mt-0.5">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+      </svg>
+    </a>
+    <h1 class="text-2xl font-bold flex-1">Κατηγορίες Παγίων</h1>
+    @if (!showAddForm()) {
+      <button class="btn btn-primary btn-sm gap-1.5" (click)="openAdd()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Νέα Κατηγορία
+      </button>
+    }
+  </div>
+
+  @if (error()) {
+    <div role="alert" class="alert alert-error text-sm">
+      <svg xmlns="http://www.w3.org/2000/svg" class="size-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  <!-- Create form -->
+  @if (showAddForm()) {
+    <div class="card bg-base-100 border border-primary/40 shadow-sm">
+      <div class="card-body p-5">
+        <h3 class="font-semibold text-sm mb-3">Νέα Κατηγορία</h3>
+        <form [formGroup]="form" (ngSubmit)="save()" class="space-y-3">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <fieldset class="fieldset py-0">
+              <legend class="fieldset-legend text-xs">Όνομα *</legend>
+              <input formControlName="name" type="text" class="input input-sm w-full" placeholder="π.χ. Βιβλία" />
+            </fieldset>
+            <fieldset class="fieldset py-0">
+              <legend class="fieldset-legend text-xs">Περιγραφή</legend>
+              <input formControlName="description" type="text" class="input input-sm w-full" placeholder="Προαιρετική περιγραφή" />
+            </fieldset>
+          </div>
+          <div class="flex gap-2 justify-end pt-1">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="cancelAdd()">Άκυρο</button>
+            <button type="submit" class="btn btn-primary btn-sm" [disabled]="saving() || form.invalid">
+              @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
+              Αποθήκευση
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="flex justify-center py-12">
+      <span class="loading loading-spinner loading-lg text-primary"></span>
+    </div>
+  } @else if (types().length === 0) {
+    <div class="text-center py-16 text-base-content/40">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="size-12 mx-auto mb-3 opacity-30">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
+      </svg>
+      <p class="text-sm">Δεν υπάρχουν κατηγορίες ακόμα</p>
+      <p class="text-xs mt-1">Πατήστε «Νέα Κατηγορία» για να ξεκινήσετε</p>
+    </div>
+  } @else {
+    <div class="space-y-2">
+      @for (t of types(); track t.id) {
+        <div class="card bg-base-100 border border-base-200 shadow-sm">
+          <div class="card-body p-4">
+
+            @if (editingId() === t.id) {
+              <!-- Inline edit form -->
+              <form [formGroup]="editForm" (ngSubmit)="saveEdit(t.id)" class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <fieldset class="fieldset py-0">
+                    <legend class="fieldset-legend text-xs">Όνομα *</legend>
+                    <input formControlName="name" type="text" class="input input-sm w-full" />
+                  </fieldset>
+                  <fieldset class="fieldset py-0">
+                    <legend class="fieldset-legend text-xs">Περιγραφή</legend>
+                    <input formControlName="description" type="text" class="input input-sm w-full" />
+                  </fieldset>
+                </div>
+                <div class="flex gap-2 justify-end">
+                  <button type="button" class="btn btn-ghost btn-xs" (click)="cancelEdit()">Άκυρο</button>
+                  <button type="submit" class="btn btn-primary btn-xs" [disabled]="saving() || editForm.invalid">
+                    @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
+                    Αποθήκευση
+                  </button>
+                </div>
+              </form>
+
+            } @else {
+              <div class="flex items-center gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-semibold">{{ t.name }}</span>
+                    <span class="badge badge-sm badge-ghost">{{ t.fields.length }} χαρακτηριστικά</span>
+                    @if (t.assetCount > 0) {
+                      <span class="badge badge-sm badge-ghost">{{ t.assetCount }} πάγια</span>
+                    }
+                  </div>
+                  @if (t.description) {
+                    <p class="text-sm text-base-content/50 mt-0.5">{{ t.description }}</p>
+                  }
+                </div>
+
+                <div class="flex gap-1 shrink-0">
+                  <a [routerLink]="['/asset-categories', t.id]" class="btn btn-ghost btn-xs gap-1 text-primary">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-3.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" />
+                    </svg>
+                    Χαρακτηριστικά
+                  </a>
+                  <button class="btn btn-ghost btn-xs" (click)="startEdit(t)" title="Επεξεργασία">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-3.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+                    </svg>
+                  </button>
+                  <button class="btn btn-ghost btn-xs text-error"
+                          (click)="confirmDelete(t.id, t.assetCount)"
+                          [disabled]="deletingId() === t.id || t.assetCount > 0"
+                          [title]="t.assetCount > 0 ? 'Δεν μπορεί να διαγραφεί — υπάρχουν ' + t.assetCount + ' πάγια' : 'Διαγραφή'">
+                    @if (deletingId() === t.id) {
+                      <span class="loading loading-spinner loading-xs"></span>
+                    } @else {
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-3.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                      </svg>
+                    }
+                  </button>
+                </div>
+              </div>
+            }
+
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+</div>

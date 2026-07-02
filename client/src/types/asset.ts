@@ -125,6 +125,54 @@ export interface AssetContractHistDto {
 }
 
 
+export interface AssetTypeCreateDto {
+  name: string;
+  description?: string;
+}
+
+export interface AssetTypeUpdateDto {
+  name: string;
+  description?: string;
+}
+
+export interface AssetTypeFieldOptionCreateDto {
+  label: string;
+  value: string;
+  displayOrder: number;
+}
+
+export interface AssetTypeFieldOptionUpdateDto {
+  label: string;
+  value: string;
+  displayOrder: number;
+}
+
+export interface AssetTypeFieldCreateDto {
+  name: string;
+  label: string;
+  dataType: FieldDataType;
+  placeholder?: string;
+  defaultValue?: string;
+  displayOrder: number;
+  validationRegex?: string;
+  minValue?: number;
+  maxValue?: number;
+  isRequired: boolean;
+  options?: AssetTypeFieldOptionCreateDto[];
+}
+
+export interface AssetTypeFieldUpdateDto {
+  label: string;
+  placeholder?: string;
+  defaultValue?: string;
+  displayOrder: number;
+  validationRegex?: string;
+  minValue?: number;
+  maxValue?: number;
+  isRequired: boolean;
+}
+
+
 export interface AssetAttributeFilter {
   fieldName: string;
   equals?: string;

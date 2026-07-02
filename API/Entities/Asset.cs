@@ -35,7 +35,7 @@ public class Asset: BaseEntity
     public JsonDocument? PropertiesJson { get; set; }
 
     // Navigation Properties
-    // 1 asset έχει 1 τύπο, αλλά 1 τύπος μπορεί να έχει πολλά assets
+    // 1 asset έχει 1 τύπο πχ βιβλιο ή εργαλειο, αλλά 1 τύπος μπορεί να έχει πολλά assets
     [ForeignKey(nameof(AssetTypeId))]
     [JsonIgnore]
     public  AssetType AssetType { get; set; } = null!;

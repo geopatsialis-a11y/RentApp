@@ -9,7 +9,15 @@ import {
   AssetSearchRequest,
   AssetDetailDto,
   AssetContractHistDto,
-  CostAssetHistUpdateDto
+  CostAssetHistUpdateDto,
+  AssetTypeFieldOptionCreateDto,
+  AssetTypeFieldOptionDto,
+  AssetTypeFieldDto,
+  AssetTypeFieldUpdateDto,
+  AssetTypeFieldCreateDto,
+  AssetTypeUpdateDto,
+  AssetTypeCreateDto,
+  AssetTypeFieldOptionUpdateDto
 } from '../../types/asset';
 import { PaginatedResult } from '../../types/pagination';
 
@@ -43,11 +51,63 @@ getAssets(pageNumber: number, pageSize: number, searchTerm?: string, assetTypeId
 
   delete(id: string) { return this.http.delete(`${this.base}/${id}`); }
 
+  searchAssets(req: AssetSearchRequest) {
+    const body = {
+      assetTypeId: req.assetTypeId,
+      status: req.status,
+      search: req.search,
+      page: req.pageNumber ?? 1,
+      pageSize: req.pageSize ?? 12,
+      sortBy: req.sortBy,
+      filters: req.filters.map(f => ({ fieldName: f.fieldName, equals: f.equals }))
+    };
+    return this.http.post<PaginatedResult<AssetDto>>(`${this.base}/search`, body);
+  }
+
+
+// --------------------------------------------------------------------------------
+//    type related methods
+// --------------------------------------------------------------------------------
   getAssetTypes() { return this.http.get<AssetTypeLookupDto[]>(`${this.typeBase}/lookup`); }
+  
+  getAllAssetTypes() { return this.http.get<AssetTypeDto[]>(this.typeBase); }
 
   getAssetTypeById(id: string) { return this.http.get<AssetTypeDto>(`${this.typeBase}/${id}`); }
 
- getMaintenanceHistory(assetId: string, page = 1, pageSize = 5) {
+  createAssetType(dto: AssetTypeCreateDto) { return this.http.post<AssetTypeDto>(this.typeBase, dto); }
+
+  updateAssetType(id: string, dto: AssetTypeUpdateDto) { return this.http.put<AssetTypeDto>(`${this.typeBase}/${id}`, dto); }
+
+  deleteAssetType(id: string) { return this.http.delete(`${this.typeBase}/${id}`); }
+
+  addField(typeId: string, dto: AssetTypeFieldCreateDto) {
+    return this.http.post<AssetTypeFieldDto>(`${this.typeBase}/${typeId}/fields`, dto);
+  }
+
+  updateField(typeId: string, fieldId: string, dto: AssetTypeFieldUpdateDto) {
+    return this.http.put<AssetTypeFieldDto>(`${this.typeBase}/${typeId}/fields/${fieldId}`, dto);
+  }
+
+  deleteField(typeId: string, fieldId: string) {
+    return this.http.delete(`${this.typeBase}/${typeId}/fields/${fieldId}`);
+  }
+
+  addOption(typeId: string, fieldId: string, dto: AssetTypeFieldOptionCreateDto) {
+    return this.http.post<AssetTypeFieldOptionDto>(`${this.typeBase}/${typeId}/fields/${fieldId}/options`, dto);
+  }
+
+  updateOption(typeId: string, fieldId: string, optionId: string, dto: AssetTypeFieldOptionUpdateDto) {
+    return this.http.put<AssetTypeFieldOptionDto>(`${this.typeBase}/${typeId}/fields/${fieldId}/options/${optionId}`, dto);
+  }
+
+  deleteOption(typeId: string, fieldId: string, optionId: string) {
+    return this.http.delete(`${this.typeBase}/${typeId}/fields/${fieldId}/options/${optionId}`);
+  }
+
+  // --------------------------------------------------------------------------------
+  //    maintenance history related methods
+  // --------------------------------------------------------------------------------
+  getMaintenanceHistory(assetId: string, page = 1, pageSize = 5) {
     const params = new HttpParams().set('pageNumber', page).set('pageSize', pageSize);
     return this.http.get<PaginatedResult<CostAssetHistDto>>(`${this.base}/${assetId}/maintenance-history`, { params });
   }
@@ -70,21 +130,9 @@ getAssets(pageNumber: number, pageSize: number, searchTerm?: string, assetTypeId
     return this.http.delete(`${this.base}/${assetId}/maintenance-history/${recordId}`);
   }
 
-  searchAssets(req: AssetSearchRequest) {
-    const body = {
-      assetTypeId: req.assetTypeId,
-      status: req.status,
-      search: req.search,
-      page: req.pageNumber ?? 1,
-      pageSize: req.pageSize ?? 12,
-      sortBy: req.sortBy,
-      filters: req.filters.map(f => ({ fieldName: f.fieldName, equals: f.equals }))
-    };
-    return this.http.post<PaginatedResult<AssetDto>>(`${this.base}/search`, body);
-  }
-
-
-  
+  // --------------------------------------------------------------------------------
+  //    photo related methods
+  // --------------------------------------------------------------------------------
   addPhoto(assetId: string, file: File) {
     const form = new FormData();
     form.append('file', file);
