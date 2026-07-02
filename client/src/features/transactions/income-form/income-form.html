@@ -1,0 +1,257 @@
+<div class="max-w-7xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3">
+    <a routerLink="/transactions/history" class="btn btn-ghost btn-sm btn-square" aria-label="Πίσω">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"/>
+      </svg>
+    </a>
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">Νέα Εισπράξη</h1>
+      <p class="text-sm text-base-content/60">Επιλέξτε συμβόλαιο και καταχωρίστε πληρωμή</p>
+    </div>
+    <div class="ml-auto">
+      <a routerLink="/transactions/history" class="btn btn-ghost btn-sm gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/>
+        </svg>
+        Ιστορικό
+      </a>
+    </div>
+  </div>
+
+  <div class="grid lg:grid-cols-5 gap-6 items-start">
+
+    <!-- ══ Contract list (3 / 5) ══ -->
+    <div class="lg:col-span-3 space-y-3">
+
+      <!-- Filters -->
+      <div class="flex flex-col sm:flex-row gap-2">
+        <label class="input input-bordered input-sm flex items-center gap-2 flex-1">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 shrink-0 opacity-50">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+          </svg>
+          <input type="text" placeholder="Αναζήτηση πελάτη ή ΑΔΕΑ..." class="grow bg-transparent outline-none text-sm"
+                 [value]="search()" (input)="onSearch($event)"/>
+        </label>
+        <select class="select select-bordered select-sm" (change)="onStatus($event)">
+          <option value="">Όλες οι καταστάσεις</option>
+          <option value="0">Εκκρεμές</option>
+          <option value="1">Ενεργό</option>
+          <option value="2">Ολοκληρωμένο</option>
+          <option value="3">Ακυρωμένο</option>
+        </select>
+      </div>
+
+      <!-- Table card -->
+      <div class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
+
+        @if (loading()) {
+          <div class="flex justify-center items-center py-16">
+            <span class="loading loading-spinner loading-md text-primary"></span>
+          </div>
+        } @else if (contracts().length === 0) {
+          <div class="flex flex-col items-center justify-center py-16 text-center px-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10 text-base-content/20 mb-3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/>
+            </svg>
+            <p class="text-base-content/50">Δεν βρέθηκαν συμβόλαια</p>
+          </div>
+        } @else {
+          <div class="overflow-x-auto">
+            <table class="table table-sm">
+              <thead class="bg-base-200">
+                <tr class="text-xs uppercase text-base-content/50">
+                  <th>Πελάτης / Πάγια</th>
+                  <th class="hidden sm:table-cell">Διάρκεια</th>
+                  <th class="text-right">Σύνολο</th>
+                  <th class="text-right">Υπόλοιπο</th>
+                  <th class="hidden md:table-cell">Κατάσταση</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (c of contracts(); track c.id) {
+                  <tr class="hover cursor-pointer transition-colors"
+                      [class.bg-primary]="selected()?.id === c.id"
+                      [class.text-primary-content]="selected()?.id === c.id"
+                      (click)="select(c)">
+                    <td>
+                      <div class="font-semibold text-sm">{{ c.customerName }}</div>
+                      <div class="text-xs opacity-60 truncate max-w-40">{{ c.assetNames.join(', ') }}</div>
+                    </td>
+                    <td class="hidden sm:table-cell text-xs whitespace-nowrap">
+                      {{ c.startDate | date:'dd/MM/yy' }} – {{ c.endDate | date:'dd/MM/yy' }}
+                    </td>
+                    <td class="text-right font-medium text-sm">{{ c.totalAmount | currency:'EUR':'symbol':'1.2-2' }}</td>
+                    <td class="text-right text-sm font-semibold"
+                        [class.text-error]="selected()?.id !== c.id && c.outstandingBalance > 0"
+                        [class.text-success]="selected()?.id !== c.id && c.outstandingBalance <= 0">
+                      {{ c.outstandingBalance | currency:'EUR':'symbol':'1.2-2' }}
+                    </td>
+                    <td class="hidden md:table-cell">
+                      <span [class]="statusBadge(c.status)">{{ statusLabel(c.status) }}</span>
+                    </td>
+                    <td>
+                      <button class="btn btn-xs"
+                              [class.btn-primary]="selected()?.id !== c.id"
+                              [class.btn-ghost]="selected()?.id === c.id"
+                              (click)="select(c); $event.stopPropagation()">
+                        Επιλογή
+                      </button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          @if (totalPages() > 1) {
+            <div class="flex items-center justify-between px-4 py-3 border-t border-base-200 text-sm">
+              <span class="text-base-content/50 text-xs">{{ totalCount() }} συμβόλαια</span>
+              <div class="join">
+                <button class="join-item btn btn-xs" [disabled]="currentPage() === 1" (click)="load(currentPage() - 1)">‹</button>
+                @for (p of pages(); track p) {
+                  <button class="join-item btn btn-xs" [class.btn-primary]="p === currentPage()" (click)="load(p)">{{ p }}</button>
+                }
+                <button class="join-item btn btn-xs" [disabled]="currentPage() === totalPages()" (click)="load(currentPage() + 1)">›</button>
+              </div>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- ══ Payment form (2 / 5) ══ -->
+    <div class="lg:col-span-2 lg:sticky lg:top-20">
+
+      @if (selected(); as c) {
+        <div class="card bg-base-100 shadow border border-base-200">
+          <div class="card-body gap-4">
+
+            <!-- Contract summary -->
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <h2 class="font-bold text-base truncate">{{ c.customerName }}</h2>
+                <p class="text-xs text-base-content/60 truncate">{{ c.assetNames.join(' · ') }}</p>
+              </div>
+              <button class="btn btn-ghost btn-xs btn-square shrink-0" (click)="clearSelected()" aria-label="Κλείσιμο">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Balance summary -->
+            <div class="grid grid-cols-3 gap-2 text-center">
+              <div class="rounded-xl bg-base-200 px-2 py-3">
+                <div class="text-xs text-base-content/50 mb-1">Σύνολο</div>
+                <div class="font-bold text-sm">{{ c.totalAmount | currency:'EUR':'symbol':'1.2-2' }}</div>
+              </div>
+              <div class="rounded-xl bg-success/10 px-2 py-3">
+                <div class="text-xs text-base-content/50 mb-1">Πληρωθέν</div>
+                <div class="font-bold text-sm text-success">{{ c.paidAmount | currency:'EUR':'symbol':'1.2-2' }}</div>
+              </div>
+              <div class="rounded-xl px-2 py-3" [class]="c.outstandingBalance > 0 ? 'bg-error/10' : 'bg-success/10'">
+                <div class="text-xs text-base-content/50 mb-1">Υπόλοιπο</div>
+                <div class="font-bold text-sm" [class]="c.outstandingBalance > 0 ? 'text-error' : 'text-success'">
+                  {{ c.outstandingBalance | currency:'EUR':'symbol':'1.2-2' }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            @if (c.totalAmount > 0) {
+              <div>
+                <div class="flex justify-between text-xs text-base-content/50 mb-1">
+                  <span>Εξόφληση</span>
+                  <span>{{ ((c.paidAmount / c.totalAmount) * 100) | number:'1.0-0' }}%</span>
+                </div>
+                <progress class="progress progress-success w-full" [value]="c.paidAmount" [max]="c.totalAmount"></progress>
+              </div>
+            }
+
+            <div class="divider my-0"></div>
+
+            <!-- Alerts -->
+            @if (success()) {
+              <div class="alert alert-success py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                </svg>
+                <span class="text-sm">Η εισπράξη καταχωρίστηκε!</span>
+              </div>
+            }
+            @if (errorMsg()) {
+              <div class="alert alert-error py-2">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"/>
+                </svg>
+                <span class="text-sm">{{ errorMsg() }}</span>
+              </div>
+            }
+
+            <!-- Form -->
+            <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-3">
+
+              <div class="form-control">
+                <label class="label pb-1"><span class="label-text font-medium text-sm">Ποσό (€) <span class="text-error">*</span></span></label>
+                <input type="number" formControlName="amount" class="input input-bordered input-sm"
+                       placeholder="0.00" step="0.01" min="0.01"/>
+                @if (form.controls['amount'].invalid && form.controls['amount'].touched) {
+                  <div class="label pt-1"><span class="label-text-alt text-error text-xs">Απαιτείται έγκυρο ποσό</span></div>
+                }
+              </div>
+
+              <div class="form-control">
+                <label class="label pb-1"><span class="label-text font-medium text-sm">Ημερομηνία <span class="text-error">*</span></span></label>
+                <input type="date" formControlName="paymentDate" class="input input-bordered input-sm"/>
+              </div>
+
+              <div class="form-control">
+                <label class="label pb-1"><span class="label-text font-medium text-sm">Τρόπος Πληρωμής</span></label>
+                <select formControlName="paymentMethod" class="select select-bordered select-sm">
+                  <option [value]="PaymentMethod.Cash">Μετρητά</option>
+                  <option [value]="PaymentMethod.Card">Κάρτα</option>
+                  <option [value]="PaymentMethod.BankTransfer">Τραπεζική Μεταφορά</option>
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label pb-1"><span class="label-text font-medium text-sm">Σημειώσεις</span></label>
+                <textarea formControlName="notes" class="textarea textarea-bordered textarea-sm" rows="2"
+                          placeholder="Προαιρετικό"></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-sm w-full gap-2 mt-2" [disabled]="saving()">
+                @if (saving()) {
+                  <span class="loading loading-spinner loading-xs"></span>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                  </svg>
+                }
+                Καταχώριση Εισπράξεως
+              </button>
+            </form>
+
+          </div>
+        </div>
+
+      } @else {
+        <div class="card border-2 border-dashed border-base-300 bg-base-50">
+          <div class="card-body items-center justify-center py-20 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-12 text-base-content/20 mb-3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007Z"/>
+            </svg>
+            <p class="font-semibold text-base-content/40">Δεν επιλέξατε συμβόλαιο</p>
+            <p class="text-xs text-base-content/30 mt-1">Κάντε κλικ σε ένα συμβόλαιο<br>από τη λίστα αριστερά</p>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>

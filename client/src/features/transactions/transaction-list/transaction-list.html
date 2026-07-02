@@ -1,0 +1,263 @@
+<div class="max-w-6xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="flex flex-wrap items-center gap-3">
+    <div class="flex-1">
+      <h1 class="text-2xl font-bold tracking-tight">Ιστορικό Κινήσεων</h1>
+      <p class="text-sm text-base-content/60">Εισπράξεις και πληρωμές</p>
+    </div>
+    <div class="flex gap-2">
+      <a routerLink="/transactions/income/new" class="btn btn-success btn-sm gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+        </svg>
+        Νέα Εισπράξη
+      </a>
+      <a routerLink="/transactions/expense/new" class="btn btn-error btn-sm btn-outline gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
+        </svg>
+        Νέα Πληρωμή
+      </a>
+    </div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="stat bg-base-100 rounded-2xl shadow-sm border border-base-200">
+      <div class="stat-figure text-success">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"/>
+        </svg>
+      </div>
+      <div class="stat-title text-xs">Εισπράξεις (σελίδα)</div>
+      <div class="stat-value text-success text-xl">{{ incomeTotalOnPage() | currency:'EUR':'symbol':'1.2-2' }}</div>
+      <div class="stat-desc">{{ income()?.metadata?.totalCount ?? 0 }} συναλλαγές σύνολο</div>
+    </div>
+
+    <div class="stat bg-base-100 rounded-2xl shadow-sm border border-base-200">
+      <div class="stat-figure text-error">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181"/>
+        </svg>
+      </div>
+      <div class="stat-title text-xs">Πληρωμές (σελίδα)</div>
+      <div class="stat-value text-error text-xl">{{ expenseTotalOnPage() | currency:'EUR':'symbol':'1.2-2' }}</div>
+      <div class="stat-desc">{{ expenses()?.metadata?.totalCount ?? 0 }} συναλλαγές σύνολο</div>
+    </div>
+
+    <div class="stat bg-base-100 rounded-2xl shadow-sm border border-base-200">
+      <div class="stat-figure" [class]="incomeTotalOnPage() - expenseTotalOnPage() >= 0 ? 'text-success' : 'text-error'">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v17.25m0 0c-1.472 0-2.882.265-4.185.75M12 20.25c1.472 0 2.882.265 4.185.75M18.75 4.97A48.416 48.416 0 0 0 12 4.5c-2.291 0-4.545.16-6.75.47m13.5 0c1.01.143 2.01.317 3 .52m-3-.52 2.62 10.726c.122.499-.106 1.028-.589 1.202a5.988 5.988 0 0 1-2.031.352 5.988 5.988 0 0 1-2.031-.352c-.483-.174-.711-.703-.59-1.202L18.75 4.97Z"/>
+        </svg>
+      </div>
+      <div class="stat-title text-xs">Καθαρό (σελίδα)</div>
+      <div class="stat-value text-xl" [class]="incomeTotalOnPage() - expenseTotalOnPage() >= 0 ? 'text-success' : 'text-error'">
+        {{ (incomeTotalOnPage() - expenseTotalOnPage()) | currency:'EUR':'symbol':'1.2-2' }}
+      </div>
+      <div class="stat-desc">Εισπράξεις μείον Πληρωμές</div>
+    </div>
+  </div>
+
+  <!-- Error -->
+  @if (errorMsg()) {
+    <div class="alert alert-error">
+      <span class="text-sm">{{ errorMsg() }}</span>
+    </div>
+  }
+
+  <!-- Tabs -->
+  <div class="tabs tabs-boxed bg-base-200 w-fit">
+    <button class="tab gap-2" [class.tab-active]="activeTab() === 'income'" (click)="switchTab('income')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+      </svg>
+      Εισπράξεις
+      <span class="badge badge-sm">{{ income()?.metadata?.totalCount ?? 0 }}</span>
+    </button>
+    <button class="tab gap-2" [class.tab-active]="activeTab() === 'expense'" (click)="switchTab('expense')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14"/>
+      </svg>
+      Πληρωμές
+      <span class="badge badge-sm">{{ expenses()?.metadata?.totalCount ?? 0 }}</span>
+    </button>
+  </div>
+
+  <!-- ══ INCOME TAB ══ -->
+  @if (activeTab() === 'income') {
+    <div class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
+      @if (incomeLoading()) {
+        <div class="flex justify-center py-16"><span class="loading loading-spinner loading-md text-primary"></span></div>
+      } @else if (incomeItems().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-10 text-base-content/20 mb-3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+          </svg>
+          <p class="text-base-content/50">Δεν υπάρχουν εισπράξεις ακόμα</p>
+          <a routerLink="/transactions/income/new" class="btn btn-primary btn-sm mt-4">Νέα Εισπράξη</a>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead class="bg-base-200">
+              <tr class="text-xs uppercase text-base-content/50">
+                <th>Ημερομηνία</th>
+                <th>Πελάτης / Συμβόλαιο</th>
+                <th class="hidden sm:table-cell">Τρόπος</th>
+                <th class="text-right">Ποσό</th>
+                <th class="hidden md:table-cell">Σημειώσεις</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of incomeItems(); track p.id) {
+                <tr class="hover">
+                  <td class="whitespace-nowrap text-sm">{{ p.paymentDate | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    <div class="font-medium text-sm">{{ p.customerName ?? '—' }}</div>
+                    <div class="text-xs text-base-content/50">{{ p.assetNames?.join(', ') }}</div>
+                  </td>
+                  <td class="hidden sm:table-cell">
+                    <span [class]="methodBadge(p.paymentMethod)">{{ methodLabel(p.paymentMethod) }}</span>
+                  </td>
+                  <td class="text-right font-bold text-success">
+                    +{{ p.amount | currency:'EUR':'symbol':'1.2-2' }}
+                  </td>
+                  <td class="hidden md:table-cell text-xs text-base-content/60 max-w-48 truncate">{{ p.notes ?? '—' }}</td>
+                  <td>
+                    <button class="btn btn-ghost btn-xs text-error"
+                            [disabled]="deleting() === p.id"
+                            (click)="delete(p.id)"
+                            aria-label="Διαγραφή">
+                      @if (deleting() === p.id) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                      } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                        </svg>
+                      }
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot class="bg-base-200">
+              <tr>
+                <td colspan="3" class="text-xs text-base-content/50">Σύνολο σελίδας</td>
+                <td class="text-right font-bold text-success">{{ incomeTotalOnPage() | currency:'EUR':'symbol':'1.2-2' }}</td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        @if ((income()?.metadata?.totalPages ?? 1) > 1) {
+          <div class="flex items-center justify-between px-4 py-3 border-t border-base-200">
+            <span class="text-xs text-base-content/50">{{ income()?.metadata?.totalCount }} εγγραφές</span>
+            <div class="join">
+              <button class="join-item btn btn-xs" [disabled]="incomePage() === 1" (click)="loadIncome(incomePage() - 1)">‹</button>
+              @for (p of incomePages(); track p) {
+                <button class="join-item btn btn-xs" [class.btn-primary]="p === incomePage()" (click)="loadIncome(p)">{{ p }}</button>
+              }
+              <button class="join-item btn btn-xs" [disabled]="incomePage() === (income()?.metadata?.totalPages ?? 1)" (click)="loadIncome(incomePage() + 1)">›</button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- ══ EXPENSE TAB ══ -->
+  @if (activeTab() === 'expense') {
+    <div class="card bg-base-100 shadow-sm border border-base-200 overflow-hidden">
+      @if (expensesLoading()) {
+        <div class="flex justify-center py-16"><span class="loading loading-spinner loading-md text-primary"></span></div>
+      } @else if (expenseItems().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16 text-center">
+          <p class="text-base-content/50">Δεν υπάρχουν πληρωμές ακόμα</p>
+          <a routerLink="/transactions/expense/new" class="btn btn-error btn-sm mt-4">Νέα Πληρωμή</a>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="table table-sm">
+            <thead class="bg-base-200">
+              <tr class="text-xs uppercase text-base-content/50">
+                <th>Ημερομηνία</th>
+                <th>Περιγραφή</th>
+                <th class="hidden sm:table-cell">Πάγια</th>
+                <th class="hidden sm:table-cell">Τρόπος</th>
+                <th class="text-right">Ποσό</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (p of expenseItems(); track p.id) {
+                <tr class="hover">
+                  <td class="whitespace-nowrap text-sm">{{ p.paymentDate | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    <div class="font-medium text-sm">{{ p.description ?? '—' }}</div>
+                    @if (p.notes) {
+                      <div class="text-xs text-base-content/50 truncate max-w-40">{{ p.notes }}</div>
+                    }
+                    @if (p.attachmentUrl) {
+                      <a [href]="p.attachmentUrl" target="_blank" class="text-xs text-primary link link-hover gap-1 flex items-center mt-0.5">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-3">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/>
+                        </svg>
+                        {{ p.attachmentFileName }}
+                      </a>
+                    }
+                  </td>
+                  <td class="hidden sm:table-cell text-xs text-base-content/60">{{ p.assetNames?.join(', ') || '—' }}</td>
+                  <td class="hidden sm:table-cell">
+                    <span [class]="methodBadge(p.paymentMethod)">{{ methodLabel(p.paymentMethod) }}</span>
+                  </td>
+                  <td class="text-right font-bold text-error">
+                    -{{ p.amount | currency:'EUR':'symbol':'1.2-2' }}
+                  </td>
+                  <td>
+                    <button class="btn btn-ghost btn-xs text-error"
+                            [disabled]="deleting() === p.id"
+                            (click)="delete(p.id)"
+                            aria-label="Διαγραφή">
+                      @if (deleting() === p.id) {
+                        <span class="loading loading-spinner loading-xs"></span>
+                      } @else {
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                        </svg>
+                      }
+                    </button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+            <tfoot class="bg-base-200">
+              <tr>
+                <td colspan="4" class="text-xs text-base-content/50">Σύνολο σελίδας</td>
+                <td class="text-right font-bold text-error">{{ expenseTotalOnPage() | currency:'EUR':'symbol':'1.2-2' }}</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        @if ((expenses()?.metadata?.totalPages ?? 1) > 1) {
+          <div class="flex items-center justify-between px-4 py-3 border-t border-base-200">
+            <span class="text-xs text-base-content/50">{{ expenses()?.metadata?.totalCount }} εγγραφές</span>
+            <div class="join">
+              <button class="join-item btn btn-xs" [disabled]="expensesPage() === 1" (click)="loadExpenses(expensesPage() - 1)">‹</button>
+              @for (p of expensePages(); track p) {
+                <button class="join-item btn btn-xs" [class.btn-primary]="p === expensesPage()" (click)="loadExpenses(p)">{{ p }}</button>
+              }
+              <button class="join-item btn btn-xs" [disabled]="expensesPage() === (expenses()?.metadata?.totalPages ?? 1)" (click)="loadExpenses(expensesPage() + 1)">›</button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+  }
+
+</div>

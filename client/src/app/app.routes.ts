@@ -18,6 +18,9 @@ import { QrScanner } from '../shared/qr-scanner/qr-scanner';
 import { PaymentPage } from '../features/payment/payment-page/payment-page';
 import { AssetCategoryList } from '../features/category/asset-category-list/asset-category-list';
 import { AssetCategoryDetail } from '../features/category/asset-category-detail/asset-category-detail';
+import { IncomeForm } from '../features/transactions/income-form/income-form';
+import { ExpenseForm } from '../features/transactions/expense-form/expense-form';
+import { TransactionList } from '../features/transactions/transaction-list/transaction-list';
 
 export const routes: Routes = [
   {path: '',component: LandingPage,canActivate: [guestGuard],runGuardsAndResolvers: 'always'},
@@ -57,8 +60,14 @@ export const routes: Routes = [
       { path: 'asset-categories', component: AssetCategoryList },
       { path: 'asset-categories/:id', component: AssetCategoryDetail },
 
+      // Legacy (keep for now)
       { path: 'payments', component: PaymentPage },
       { path: 'payments/new', component: PaymentPage },
+      // New transactions section
+      { path: 'transactions', component: IncomeForm },
+      { path: 'transactions/income/new', component: IncomeForm },
+      { path: 'transactions/expense/new', component: ExpenseForm },
+      { path: 'transactions/history', component: TransactionList },
 
       { path: 'scan', component: QrScanner },
 

@@ -295,7 +295,7 @@ namespace API.Services;
         return new CostAssetHistDto
         {
             Id           = payment.Id,
-            Date         = payment.PaymentDate,
+            Date         = DateTime.SpecifyKind(payment.PaymentDate, DateTimeKind.Utc),
             Description  = payment.Description ?? string.Empty,
             Cost         = payment.Amount,
             MaintainedBy = payment.Notes,

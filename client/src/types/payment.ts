@@ -48,4 +48,5 @@ export interface PaymentListItemDto {
   attachmentUrl?: string;
   attachmentFileName?: string;
   createdAt: string;
+  rowVersion?: number;
 }

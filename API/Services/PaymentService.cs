@@ -30,7 +30,7 @@ public class PaymentService(
         {
             TenantId        = tenantProvider.TenantId,
             Amount          = dto.Amount,
-            PaymentDate     = dto.PaymentDate,
+            PaymentDate     = DateTime.SpecifyKind(dto.PaymentDate, DateTimeKind.Utc),
             PaymentMethod   = dto.PaymentMethod,
             Notes           = dto.Notes,
             TransactionType = TransactionType.Income,
