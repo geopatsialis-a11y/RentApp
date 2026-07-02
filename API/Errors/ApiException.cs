@@ -14,3 +14,6 @@ public class NotFoundException(string message) : Exception(message);
 // Maps to 400 — used for business-rule violations (duplicate AFM, restricted delete, etc.)
 public class BadRequestException(string message) : Exception(message);
  
+ 
+// Maps to 409 — used when a concurrent update is detected (xmin mismatch)
+public class ConflictException(string message) : Exception(message);

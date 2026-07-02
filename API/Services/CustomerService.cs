@@ -50,6 +50,10 @@ public class CustomerService (IUnitOfWork uow, ITenantProvider tenantProvider): 
     {
         var customer = await uow.CustomerRepository.GetEntityByIdAsync(id)
             ?? throw new NotFoundException($"Customer '{id}' was not found.");
+
+        if (dto.RowVersion != 0 && customer.xmin != dto.RowVersion)
+            throw new ConflictException("Ο πελάτης τροποποιήθηκε από άλλο χρήστη. Ανανεώστε τη σελίδα και δοκιμάστε ξανά.");
+
  
         if (await uow.CustomerRepository.AfmExistsAsync(dto.Afm, excludingId: id))
             throw new BadRequestException($"Another customer already uses AFM '{dto.Afm}'.");
@@ -137,6 +141,9 @@ public class CustomerService (IUnitOfWork uow, ITenantProvider tenantProvider): 
 
         if (contact == null || contact.CustomerId != customerId)
             throw new NotFoundException($"Contact '{contactId}' was not found for this customer.");
+        
+        if (dto.RowVersion != 0 && contact.xmin != dto.RowVersion)
+            throw new ConflictException("Η επαφή τροποποιήθηκε από άλλο χρήστη. Ανανεώστε τη σελίδα και δοκιμάστε ξανά.");
 
         contact.Name = dto.Name;
         contact.Phone = dto.Phone;

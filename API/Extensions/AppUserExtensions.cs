@@ -22,6 +22,3 @@ public static class AppUserExtensions
 
 }
 
-// Maps to 409 — used when a concurrent update is detected (xmin mismatch)
-public class ConflictException(string message) : Exception(message);
-

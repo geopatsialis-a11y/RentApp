@@ -64,6 +64,7 @@ public class AssetUpdateDto
  
 public class AssetStatusUpdateDto
 {
+    public uint RowVersion { get; set; }
     public AssetStatus Status { get; set; }
 }
 
@@ -81,6 +82,7 @@ public class AssetContractHistDto
 
 public class CostAssetHistDto
 {
+    public uint RowVersion { get; set; }
     public Guid Id { get; set; }
     public DateTime Date { get; set; }
     public string Description { get; set; }=null!;
@@ -89,6 +91,7 @@ public class CostAssetHistDto
 }
 public class CostAssetHistUpdateDto
 {
+    public uint RowVersion { get; set; }
     public DateTime Date { get; set; }
     [Required, MaxLength(250)]
     public string Description { get; set; } = null!;

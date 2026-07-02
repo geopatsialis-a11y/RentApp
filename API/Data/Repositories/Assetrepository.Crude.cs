@@ -371,8 +371,7 @@ public partial class AssetRepository
     
     private static AssetDto MapToDto(Asset asset) => new()
     {
-         Id           = asset.Id,
-        RowVersion   = asset.xmin, 
+        Id           = asset.Id,
         AssetTypeId  = asset.AssetTypeId,
         AssetTypeName= asset.AssetType?.Name ?? string.Empty,
         Name         = asset.Name,
@@ -382,7 +381,9 @@ public partial class AssetRepository
         Status       = asset.Status,
         CreatedAt    = asset.CreatedAt,
         PhotoUrl     = asset.PhotoUrl,
-        Attributes   = BuildAttributes(asset)
+        Attributes   = BuildAttributes(asset),
+        RowVersion   = asset.xmin
+
     };
 
     private static AssetDetailDto MapToDetailDto(Asset asset) => new()
@@ -398,7 +399,10 @@ public partial class AssetRepository
         CreatedAt    = asset.CreatedAt,
         PhotoUrl     = asset.PhotoUrl,
         Photos       = asset.Photos.Select(p => new PhotoDto { Id = p.Id, Url = p.Url, IsMain = p.IsMain }).ToList(),
-        Attributes   = BuildAttributes(asset)
+        Attributes   = BuildAttributes(asset),
+        RowVersion   = asset.xmin
+
+        
     };
 
     private static Dictionary<string, object?> BuildAttributes(Asset asset)

@@ -115,7 +115,9 @@ public class AssetController(IAssetService assetService) : BaseApiController
         catch (NotFoundException ex)
         {
             return NotFound(new { message = ex.Message });
-        }
+        }       
+        catch (ConflictException ex)    { return Conflict(new { message = ex.Message }); }
+
     }
 
     // DELETE api/asset/{id}   (soft delete)
@@ -205,6 +207,7 @@ public class AssetController(IAssetService assetService) : BaseApiController
             return Ok(asset);
         }
         catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (ConflictException ex)    { return Conflict(new { message = ex.Message }); }
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
@@ -261,6 +264,8 @@ public class AssetController(IAssetService assetService) : BaseApiController
         {
             return NotFound(new { message = ex.Message });
         }
+        catch (ConflictException ex)    { return Conflict(new { message = ex.Message }); }
+
     }
 
     // DELETE api/asset/{id}/maintenance-history/{recordId}

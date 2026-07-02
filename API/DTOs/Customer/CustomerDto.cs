@@ -6,7 +6,7 @@ namespace API.DTOs.Customer;
 
 public class CustomerDto
 {
-
+    public uint RowVersion { get; set; }
     public Guid Id { get; set; }
     public CustomerType Type { get; set; }
     public string Name { get; set; } = null!;
@@ -40,6 +40,7 @@ public class CustomerCreateDto
 
 public class CustomerUpdateDto
 {
+    public uint RowVersion { get; set; }
     public CustomerType Type { get; set; }
     public required string Name { get; set; }
     public required string Afm { get; set; }

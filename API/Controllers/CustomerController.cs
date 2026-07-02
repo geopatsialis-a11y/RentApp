@@ -65,6 +65,7 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
             return Ok(updated);
         }
         catch (NotFoundException ex) { return NotFound(new { message = ex.Message }); }
+        catch (ConflictException ex)    { return Conflict(new { message = ex.Message }); }
         catch (BadRequestException ex) { return BadRequest(new { message = ex.Message }); }
     }
 
@@ -113,6 +114,8 @@ public class CustomerController(ICustomerService customerService) : BaseApiContr
         {
             return NotFound(new { message = ex.Message });
         }
+        catch (ConflictException ex)    { return Conflict(new { message = ex.Message }); }
+
     }
 
 
