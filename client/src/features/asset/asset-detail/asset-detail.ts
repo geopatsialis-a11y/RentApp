@@ -6,11 +6,12 @@ import { AssetService } from '../../../core/services/asset-service';
 import { AssetDetailDto, AssetStatus, RateUnit, AssetTypeFieldDto, FieldDataType } from '../../../types/asset';
 import { AssetMaintenanceHistory } from '../asset-maintenance-history/asset-maintenance-history';
 import { AssetRentalHistory } from '../asset-rental-history/asset-rental-history';
+import { AssetQrCode } from "../asset-qr-code/asset-qr-code";
 
 
 @Component({
   selector: 'app-asset-detail',
-  imports: [RouterLink, DatePipe, CurrencyPipe, AssetMaintenanceHistory, AssetRentalHistory],
+  imports: [RouterLink, DatePipe, CurrencyPipe, AssetMaintenanceHistory, AssetRentalHistory, AssetQrCode],
   templateUrl: './asset-detail.html',
 })
 export class AssetDetail implements OnInit {

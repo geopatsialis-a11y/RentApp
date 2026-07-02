@@ -107,6 +107,12 @@
       </div>
     </div>
   }
+ <!-- QR Code (collapsible) -->
+  @if (assetId()) {
+    <app-asset-qr-code [assetId]="assetId()" [assetName]="asset()?.name ?? ''" />
+  }
+
+
  <!-- Maintenance history (collapsible, paginated) -->
   @if (assetId()) {
     <app-asset-maintenance-history [assetId]="assetId()" />

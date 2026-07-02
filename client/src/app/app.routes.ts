@@ -14,6 +14,7 @@ import { MemberInvite } from '../features/user/member-invite/member-invite';
 import { AssetList } from '../features/asset/asset-list/asset-list';
 import { AssetForm } from '../features/asset/asset-form/asset-form';
 import { AssetDetail } from '../features/asset/asset-detail/asset-detail';
+import { QrScanner } from '../shared/qr-scanner/qr-scanner';
 
 export const routes: Routes = [
   {path: '',component: LandingPage,canActivate: [guestGuard],runGuardsAndResolvers: 'always'},
@@ -49,6 +50,9 @@ export const routes: Routes = [
       { path: 'assets/new', component: AssetForm },
       { path: 'assets/:id/edit', component: AssetForm },
       { path: 'assets/:id', component: AssetDetail },
+
+      { path: 'scan', component: QrScanner },
+
 
       { path: 'invite', component: MemberInvite }
     ]
