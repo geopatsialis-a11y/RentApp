@@ -37,12 +37,16 @@ export interface CustomerStatsDto {
 }
 
 
-export interface UpdateCustomerDto {  
+export interface UpdateCustomerDto {
   rowVersion?: number;
   name: string;
   afm: string;
-  dou?: string;
-  address?: string;
   representative?: string;
+}
+
+export interface CustomerLookupDto {
+  id: string;
+  name: string;
+  afm: string;
 }
 

@@ -36,9 +36,9 @@ public class DashboardService(AppDbContext context) : IDashboardService
         // Outstanding balance across active/pending contracts
         var outstandingBalance = await context.Contracts
             .Where(c => c.Status == RentalStatus.Active || c.Status == RentalStatus.Pending)
-            .Select(c => c.TotalAmount - (c.Payments
-                .Where(p => p.TransactionType == TransactionType.Income)
-                .Sum(p => (decimal?)p.Amount) ?? 0m))
+            .Select(c => c.TotalAmount - (c.PaymentContracts
+                .Where(pc => pc.Payment.TransactionType == TransactionType.Income && !pc.Payment.IsDeleted)
+                .Sum(pc => (decimal?)pc.Payment.Amount) ?? 0m))
             .SumAsync(o => (decimal?)o) ?? 0m;
 
         // Overdue: Active contracts past endDate
@@ -49,9 +49,9 @@ public class DashboardService(AppDbContext context) : IDashboardService
                 c.Id,
                 c.EndDate,
                 CustomerName = c.Customer.Name,
-                Outstanding = c.TotalAmount - (c.Payments
-                    .Where(p => p.TransactionType == TransactionType.Income)
-                    .Sum(p => (decimal?)p.Amount) ?? 0m),
+                Outstanding = c.TotalAmount - (c.PaymentContracts
+                    .Where(pc => pc.Payment.TransactionType == TransactionType.Income && !pc.Payment.IsDeleted)
+                    .Sum(pc => (decimal?)pc.Payment.Amount) ?? 0m),
                 AssetNames = c.ContractAssets.Select(ca => ca.Asset.Name).ToList()
             })
             .OrderBy(c => c.EndDate)
@@ -81,8 +81,8 @@ public class DashboardService(AppDbContext context) : IDashboardService
                 PaymentDate = p.PaymentDate,
                 TransactionType = p.TransactionType,
                 PaymentMethod = p.PaymentMethod,
-                CustomerName = p.Contract != null ? p.Contract.Customer.Name : null,
-                Label = p.Description ?? p.Notes ?? (p.Contract != null ? p.Contract.Customer.Name : null)
+                CustomerName = p.PaymentContracts.Select(pc => pc.Contract.Customer.Name).FirstOrDefault(),
+                Label = p.Description ?? p.Notes ?? p.PaymentContracts.Select(pc => pc.Contract.Customer.Name).FirstOrDefault()
             })
             .ToListAsync();
 

@@ -9,7 +9,10 @@ public interface IUnitOfWork
     IContractRepository ContractRepository { get; }
     IMemberRepository MemberRepository { get; }
     IPaymentRepository PaymentRepository { get; }
+
+    Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync();
  
     Task<bool> Complete();
     bool HasChanges();
+
 }

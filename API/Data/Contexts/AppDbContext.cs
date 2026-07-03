@@ -92,6 +92,10 @@ public class AppDbContext(
             .WithMany(c => c.ContractAssets)
             .HasForeignKey(ca => ca.ContractId)
             .OnDelete(DeleteBehavior.Cascade);
+        
+        builder.Entity<ContractAsset>()
+            .Property<uint>("xmin")
+            .IsConcurrencyToken(false);
 
         builder.Entity<ContractAsset>()
             .HasOne(ca => ca.Asset)
@@ -237,13 +241,14 @@ public class AppDbContext(
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // Normalize all DateTime to Utc before saving
-        foreach (var entry in ChangeTracker.Entries())
+        // Npgsql requires DateTimeKind.Utc for timestamp with time zone
+        foreach (var entry in ChangeTracker.Entries()
+            .Where(e => e.State is EntityState.Added or EntityState.Modified))
         {
-            foreach (var prop in entry.Properties)
+            foreach (var prop in entry.Properties
+                .Where(p => p.CurrentValue is DateTime { Kind: DateTimeKind.Unspecified }))
             {
-                if (prop.CurrentValue is DateTime dt && dt.Kind == DateTimeKind.Unspecified)
-                    prop.CurrentValue = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                prop.CurrentValue = DateTime.SpecifyKind((DateTime)prop.CurrentValue!, DateTimeKind.Utc);
             }
         }
 

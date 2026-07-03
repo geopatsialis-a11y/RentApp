@@ -14,6 +14,7 @@ public class ContractAsset
     [Required]
     public Guid ContractId { get; set; }
     
+    
     [Required]
     public Guid AssetId { get; set; }
 

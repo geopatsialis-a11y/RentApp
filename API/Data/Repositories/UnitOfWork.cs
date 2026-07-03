@@ -39,16 +39,24 @@ public class UnitOfWork(
 
     public IPaymentRepository PaymentRepository =>
         _paymentRepository ??= new PaymentRepository(context);
+
+    public Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync()
+    => context.Database.BeginTransactionAsync();
  
     public async Task<bool> Complete()
     {
         try
         {
+            
             return await context.SaveChangesAsync()>0;
         }
         catch (DbUpdateException ex)
         {
+            Console.WriteLine(ex);
+            Console.WriteLine(ex.InnerException?.Message);
+
             throw new Exception("An error occurred while saving changes", ex);
+            
         }
     }
  

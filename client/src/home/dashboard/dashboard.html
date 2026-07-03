@@ -303,7 +303,7 @@
               Ιστορικό Κινήσεων
             </a>
 
-            @if ((overdue().length ?? 0) > 0) {
+            @if (overdue().length > 0) {
               <a routerLink="/transactions/income/new"
                  class="btn btn-warning btn-sm justify-start gap-3 text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 shrink-0">

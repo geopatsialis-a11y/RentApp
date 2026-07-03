@@ -1,18 +1,14 @@
 using API.DTOs.Contract;
-using API.Entities;
 using API.Helper;
 
 namespace API.Interfaces;
 
-public interface IContractRepository
+public interface IContractService
 {
     Task<PaginatedResult<ContractListItemDto>> GetAllAsync(ContractParams p);
     Task<ContractDetailDto?> GetByIdAsync(Guid id);
     Task<List<AvailableAssetDto>> GetAvailableAssetsAsync(DateTime start, DateTime end, Guid? excludeContractId = null);
-    void Add(Contract contract);
-    void Update(Contract contract);
-    void Remove(Contract contract);
-    Task<Contract?> FindAsync(Guid id);
-    Task DeleteAllAssetsAsync(Guid contractId);
-void AddAssets(IEnumerable<ContractAsset> assets);
+    Task<ContractDetailDto> CreateAsync(ContractCreateDto dto, string memberId);
+    Task<ContractDetailDto> UpdateAsync(Guid id, ContractUpdateDto dto, string memberId);
+    Task DeleteAsync(Guid id, string memberId);
 }

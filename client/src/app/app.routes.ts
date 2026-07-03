@@ -21,6 +21,9 @@ import { AssetCategoryDetail } from '../features/category/asset-category-detail/
 import { IncomeForm } from '../features/transactions/income-form/income-form';
 import { ExpenseForm } from '../features/transactions/expense-form/expense-form';
 import { TransactionList } from '../features/transactions/transaction-list/transaction-list';
+import { Dashboard } from '../home/dashboard/dashboard';
+import { ContractList } from '../features/contract/contract-list/contract-list';
+import { ContractForm } from '../features/contract/contract-form/contract-form';
 
 export const routes: Routes = [
   {path: '',component: LandingPage,canActivate: [guestGuard],runGuardsAndResolvers: 'always'},
@@ -45,7 +48,9 @@ export const routes: Routes = [
     runGuardsAndResolvers: 'always',
     canActivate: [authGuard],
     children: [
-      { path: 'home', component: Home },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },  
+      { path: 'home', component: Dashboard },    
+      { path: 'dashboard', component: Dashboard }, 
       
       { path: 'customer', component: CustomerList },
       { path: 'customer/new', component: CustomerForm },
@@ -68,6 +73,10 @@ export const routes: Routes = [
       { path: 'transactions/income/new', component: IncomeForm },
       { path: 'transactions/expense/new', component: ExpenseForm },
       { path: 'transactions/history', component: TransactionList },
+
+      { path: 'contracts', component: ContractList },
+      { path: 'contracts/new', component: ContractForm },
+      { path: 'contracts/:id/edit', component: ContractForm },
 
       { path: 'scan', component: QrScanner },
 

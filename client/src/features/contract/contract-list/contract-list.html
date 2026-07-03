@@ -1,0 +1,114 @@
+<div class="space-y-4">
+
+  <!-- Header -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <h1 class="text-2xl font-bold">Συμβόλαια</h1>
+    <a routerLink="/contracts/new" class="btn btn-primary btn-sm gap-2">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      Νέο Συμβόλαιο
+    </a>
+  </div>
+
+  <!-- Filters -->
+  <div class="flex flex-wrap gap-2">
+    <label class="input input-sm input-bordered flex items-center gap-2 w-64">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4 opacity-60">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+      </svg>
+      <input type="text" placeholder="Αναζήτηση..." class="grow" (input)="onSearch($event)" />
+    </label>
+    <select class="select select-sm select-bordered" (change)="onStatus($event)">
+      <option value="">Όλες οι καταστάσεις</option>
+      <option value="0">Εκκρεμής</option>
+      <option value="1">Ενεργό</option>
+      <option value="2">Ολοκληρωμένο</option>
+      <option value="3">Ακυρωμένο</option>
+    </select>
+    <span class="text-sm text-base-content/60 self-center">{{ totalCount() }} συμβόλαια</span>
+  </div>
+
+  <!-- Error -->
+  @if (errorMsg()) {
+    <div class="alert alert-error text-sm py-2">{{ errorMsg() }}</div>
+  }
+
+  <!-- Table -->
+  <div class="overflow-x-auto rounded-box border border-base-200">
+    <table class="table table-sm">
+      <thead class="bg-base-200">
+        <tr>
+          <th>Πελάτης</th>
+          <th>Κωδικός</th>
+          <th>Έναρξη</th>
+          <th>Λήξη</th>
+          <th>Πάγια</th>
+          <th class="text-right">Σύνολο</th>
+          <th class="text-right">Υπόλοιπο</th>
+          <th>Κατάσταση</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading()) {
+          <tr><td colspan="9" class="text-center py-8 text-base-content/50">Φόρτωση...</td></tr>
+        } @else if (contracts().length === 0) {
+          <tr><td colspan="9" class="text-center py-8 text-base-content/50">Δεν βρέθηκαν συμβόλαια.</td></tr>
+        } @else {
+          @for (c of contracts(); track c.id) {
+            <tr class="hover cursor-pointer" (click)="edit(c.id)">
+              <td class="font-medium">{{ c.customerName }}</td>
+              <td class="font-mono text-xs text-base-content/60">{{ c.referenceCode ?? '—' }}</td>
+              <td>{{ c.startDate | date:'dd/MM/yy' }}</td>
+              <td>{{ c.endDate | date:'dd/MM/yy' }}</td>
+              <td>
+                <div class="flex flex-wrap gap-1">
+                  @for (name of c.assetNames.slice(0, 2); track name) {
+                    <span class="badge badge-xs badge-outline">{{ name }}</span>
+                  }
+                  @if (c.assetNames.length > 2) {
+                    <span class="badge badge-xs badge-ghost">+{{ c.assetNames.length - 2 }}</span>
+                  }
+                </div>
+              </td>
+              <td class="text-right font-mono">{{ c.totalAmount | currency:'EUR':'symbol':'1.2-2':'el' }}</td>
+              <td class="text-right font-mono"
+                  [class.text-error]="c.outstandingBalance > 0"
+                  [class.text-success]="c.outstandingBalance <= 0">
+                {{ c.outstandingBalance | currency:'EUR':'symbol':'1.2-2':'el' }}
+              </td>
+              <td><span [class]="statusBadge(c.status)">{{ statusLabel(c.status) }}</span></td>
+              <td (click)="$event.stopPropagation()">
+                <div class="flex gap-1 justify-end">
+                  <a [routerLink]="['/contracts', c.id, 'edit']" class="btn btn-ghost btn-xs" title="Επεξεργασία">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                    </svg>
+                  </a>
+                  <button class="btn btn-ghost btn-xs text-error"
+                          [disabled]="deleting() === c.id"
+                          (click)="delete(c.id)" title="Διαγραφή">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  @if (totalPages() > 1) {
+    <div class="flex justify-center gap-1">
+      @for (p of pages(); track p) {
+        <button class="btn btn-xs" [class.btn-primary]="p === currentPage()" (click)="load(p)">{{ p }}</button>
+      }
+    </div>
+  }
+
+</div>

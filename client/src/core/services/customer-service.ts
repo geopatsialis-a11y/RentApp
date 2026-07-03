@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { ContactDto, CreateCustomerDto, CustomerDto, CustomerStatsDto } from '../../types/customers';
+import { ContactDto, CreateCustomerDto, CustomerDto, CustomerLookupDto, CustomerStatsDto } from '../../types/customers';
 import { CustomersParams, PaginatedResult } from '../../types/pagination';
 import { tap } from 'rxjs';
 
@@ -34,6 +34,12 @@ export class CustomerService {
   create(dto: CreateCustomerDto) { return this.http.post<CustomerDto>(`${this.baseUrl}customer/`, dto); }
   update(id: string, dto: CreateCustomerDto) { return this.http.put<CustomerDto>(`${this.baseUrl}customer/${id}`, dto); }
   delete(id: string) { return this.http.delete(`${this.baseUrl}customer/${id}`); }
+
+   getLookup(search?: string) {
+    let params = new HttpParams();
+    if (search) params = params.set('search', search);
+    return this.http.get<CustomerLookupDto[]>(`${this.baseUrl}customer/lookup`, { params });
+  }
 
   
   addContact(customerId: string, dto: object) {

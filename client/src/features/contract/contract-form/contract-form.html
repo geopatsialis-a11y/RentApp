@@ -1,0 +1,350 @@
+<div class="max-w-5xl mx-auto space-y-6 pb-10">
+
+  <!-- Header -->
+  <div class="flex items-center gap-3">
+    <a routerLink="/contracts" class="btn btn-ghost btn-sm btn-square">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+      </svg>
+    </a>
+    <h1 class="text-2xl font-bold">{{ isEdit() ? 'Επεξεργασία Συμβολαίου' : 'Νέο Συμβόλαιο' }}</h1>
+  </div>
+
+  @if (loading()) {
+    <div class="flex justify-center py-16"><span class="loading loading-spinner loading-lg"></span></div>
+  } @else {
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-6" autocomplete="off">
+
+    <!-- ── ΒΑΣΙΚΑ ΣΤΟΙΧΕΙΑ ─────────────────────────────────────────── -->
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body gap-4">
+        <h2 class="card-title text-base">Βασικά Στοιχεία</h2>
+
+        <!-- Customer lookup -->
+        <div class="form-control relative">
+          <label class="label"><span class="label-text font-medium">Πελάτης <span class="text-error">*</span></span></label>
+          <div class="flex gap-2">
+            <input type="text"
+                   formControlName="customerDisplay"
+                   placeholder="Αναζήτηση με όνομα ή ΑΦΜ..."
+                   class="input input-bordered input-sm flex-1"
+                   (input)="onCustomerInput($event)"
+                   (focus)="showCustomerDrop.set(true)" />
+            @if (selectedCustomer()) {
+              <button type="button" class="btn btn-ghost btn-sm btn-square" (click)="clearCustomer()" title="Καθαρισμός">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            }
+          </div>
+          @if (showCustomerDrop() && customerResults().length > 0) {
+            <div class="absolute top-full left-0 right-0 z-50 bg-base-100 border border-base-300 rounded-box shadow-lg mt-1 max-h-48 overflow-y-auto">
+              @for (c of customerResults(); track c.id) {
+                <button type="button" class="w-full text-left px-4 py-2 hover:bg-base-200 text-sm"
+                        (click)="selectCustomer(c)">
+                  <span class="font-medium">{{ c.name }}</span>
+                  <span class="text-base-content/50 ml-2 text-xs">{{ c.afm }}</span>
+                </button>
+              }
+            </div>
+          }
+          @if (form.get('customerId')?.touched && !form.get('customerId')?.value) {
+            <span class="text-error text-xs mt-1">Απαιτείται επιλογή πελάτη.</span>
+          }
+        </div>
+
+        <!-- Dates row -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="form-control">
+            <label class="label"><span class="label-text font-medium">Έναρξη <span class="text-error">*</span></span></label>
+            <input type="datetime-local" formControlName="startDate" class="input input-bordered input-sm" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text font-medium">Λήξη <span class="text-error">*</span></span></label>
+            <input type="datetime-local" formControlName="endDate" class="input input-bordered input-sm" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Ημ. Υπογραφής</span></label>
+            <input type="date" formControlName="signedDate" class="input input-bordered input-sm" />
+          </div>
+        </div>
+
+        <!-- Codes & frequency -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="form-control">
+            <label class="label"><span class="label-text">Κωδικός Αναφοράς</span></label>
+            <input type="text" formControlName="referenceCode" placeholder="π.χ. ΣΥΜ-2024-001"
+                   class="input input-bordered input-sm" maxlength="50" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Αριθμός ΑΔΩΑ</span></label>
+            <input type="text" formControlName="aadeNumber" class="input input-bordered input-sm" maxlength="100" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Συχνότητα Δόσεων</span></label>
+            <select formControlName="installmentFrequency" class="select select-bordered select-sm">
+              <option [value]="InstallmentFrequency.Monthly">Μηνιαία</option>
+              <option [value]="InstallmentFrequency.Weekly">Εβδομαδιαία</option>
+              <option [value]="InstallmentFrequency.Quarterly">Τριμηνιαία</option>
+              <option [value]="InstallmentFrequency.Yearly">Ετήσια</option>
+              <option [value]="InstallmentFrequency.OneTime">Εφάπαξ</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Status (edit only) -->
+        @if (isEdit()) {
+          <div class="form-control w-48">
+            <label class="label"><span class="label-text">Κατάσταση</span></label>
+            <select formControlName="status" class="select select-bordered select-sm">
+              <option [value]="RentalStatus.Pending">Εκκρεμής</option>
+              <option [value]="RentalStatus.Active">Ενεργό</option>
+              <option [value]="RentalStatus.Completed">Ολοκληρωμένο</option>
+              <option [value]="RentalStatus.Cancelled">Ακυρωμένο</option>
+            </select>
+          </div>
+        }
+
+        <!-- Email send placeholder -->
+        <div class="flex items-center gap-2 pt-1">
+          <button type="button" class="btn btn-outline btn-sm gap-2 opacity-50 cursor-not-allowed" disabled title="Σύντομα διαθέσιμο">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+            </svg>
+            Αποστολή Συμβολαίου με Email
+          </button>
+          <span class="text-xs text-base-content/50">(σύντομα διαθέσιμο)</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── ΠΑΓΙΑ ──────────────────────────────────────────────────────── -->
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body gap-4">
+        <h2 class="card-title text-base">Πάγια Συμβολαίου</h2>
+
+        @if (!form.get('startDate')!.value || !form.get('endDate')!.value) {
+          <p class="text-sm text-base-content/60 italic">Ορίστε πρώτα ημερομηνίες για να δείτε τα διαθέσιμα πάγια.</p>
+        } @else if (assetsLoading()) {
+          <div class="flex items-center gap-2 text-sm text-base-content/60">
+            <span class="loading loading-spinner loading-xs"></span> Φόρτωση διαθέσιμων παγίων...
+          </div>
+        } @else if (assetsLoaded()) {
+
+          <!-- Search + count -->
+          <div class="flex items-center gap-3">
+            <div class="relative flex-1 max-w-xs">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                   class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-base-content/40 pointer-events-none">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+              <input type="search" placeholder="Αναζήτηση παγίου..." class="input input-bordered input-sm pl-8 w-full"
+                     [value]="assetSearch()"
+                     (input)="onAssetSearch($event)" />
+            </div>
+            <span class="text-xs text-base-content/50">
+              {{ filteredAssets().length }} διαθέσιμα
+            </span>
+          </div>
+
+          <!-- Available assets picker -->
+          @if (filteredAssets().length === 0) {
+            <p class="text-sm text-warning">
+              {{ availableAssets().length === 0
+                  ? 'Δεν υπάρχουν διαθέσιμα πάγια για την επιλεγμένη περίοδο.'
+                  : 'Δεν βρέθηκαν πάγια για την αναζήτησή σας.' }}
+            </p>
+          } @else {
+            <div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                @for (asset of pagedAssets(); track asset.id) {
+                  <label class="flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors"
+                         [class.border-primary]="isAssetSelected(asset.id)"
+                         [class.bg-primary/5]="isAssetSelected(asset.id)"
+                         [class.border-base-300]="!isAssetSelected(asset.id)"
+                         [class.hover:bg-base-200]="!isAssetSelected(asset.id)">
+                    <input type="checkbox" class="checkbox checkbox-primary checkbox-sm"
+                           [checked]="isAssetSelected(asset.id)"
+                           (change)="toggleAsset(asset)" />
+                    <div class="min-w-0">
+                      <p class="font-medium text-sm truncate">{{ asset.name }}</p>
+                      <p class="text-xs text-base-content/50">
+                        {{ asset.assetTypeName }} · {{ asset.cost | number:'1.2-2' }}€ {{ rateUnitLabel(asset.rateUnit) }}
+                      </p>
+                    </div>
+                  </label>
+                }
+              </div>
+
+              <!-- Pagination -->
+              @if (assetTotalPages() > 1) {
+                <div class="flex items-center justify-center gap-2 mt-3">
+                  <button type="button" class="btn btn-ghost btn-xs btn-square"
+                          [disabled]="assetPage() <= 1"
+                          (click)="assetPageChange(assetPage() - 1)">‹</button>
+                  @for (p of [].constructor(assetTotalPages()); track $index) {
+                    <button type="button"
+                            class="btn btn-xs btn-square"
+                            [class.btn-primary]="assetPage() === $index + 1"
+                            [class.btn-ghost]="assetPage() !== $index + 1"
+                            (click)="assetPageChange($index + 1)">{{ $index + 1 }}</button>
+                  }
+                  <button type="button" class="btn btn-ghost btn-xs btn-square"
+                          [disabled]="assetPage() >= assetTotalPages()"
+                          (click)="assetPageChange(assetPage() + 1)">›</button>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- Selected lines -->
+          @if (assetLines().length > 0) {
+            <div class="divider my-1"></div>
+            <p class="text-sm font-medium">Επιλεγμένα πάγια:</p>
+            <div class="overflow-x-auto">
+              <table class="table table-xs">
+                <thead>
+                  <tr>
+                    <th>Πάγιο</th>
+                    <th>Έναρξη</th>
+                    <th>Λήξη</th>
+                    <th>Κόστος/μονάδα</th>
+                    <th>Μονάδα</th>
+                    <th class="text-right">Διάρκεια</th>
+                    <th class="text-right">Ποσό</th>
+                    <th>Σημειώσεις</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (line of assetLines(); track line.assetId; let i = $index) {
+                    <tr>
+                      <td class="font-medium min-w-[120px]">{{ line.assetName }}</td>
+                      <td>
+                        <input type="datetime-local" class="input input-bordered input-xs w-44"
+                               [value]="line.startDate"
+                               (change)="updateLine(i, 'startDate', $any($event.target).value)" />
+                      </td>
+                      <td>
+                        <input type="datetime-local" class="input input-bordered input-xs w-44"
+                               [value]="line.endDate"
+                               (change)="updateLine(i, 'endDate', $any($event.target).value)" />
+                      </td>
+                      <td>
+                        <input type="number" class="input input-bordered input-xs w-24" min="0" step="0.01"
+                               [value]="line.unitCost"
+                               (change)="updateLine(i, 'unitCost', +$any($event.target).value)" />
+                      </td>
+                      <td>
+                        <select class="select select-bordered select-xs"
+                                [value]="line.rateUnit"
+                                (change)="updateLine(i, 'rateUnit', +$any($event.target).value)">
+                          <option [value]="RateUnit.PerHour">/ ώρα</option>
+                          <option [value]="RateUnit.PerDay">/ ημέρα</option>
+                          <option [value]="RateUnit.PerMonth">/ μήνα</option>
+                          <option [value]="RateUnit.Sale">εφάπαξ</option>
+                        </select>
+                      </td>
+                      <td class="text-right text-xs text-base-content/50 whitespace-nowrap">
+                        {{ durationLabel(line.startDate, line.endDate) }}
+                      </td>
+                      <td class="text-right font-mono font-semibold whitespace-nowrap">{{ line.calculatedAmount | number:'1.2-2' }} €</td>
+                      <td>
+                        <input type="text" class="input input-bordered input-xs w-28"
+                               placeholder="Σημείωση..."
+                               [value]="line.notes"
+                               (change)="updateLine(i, 'notes', $any($event.target).value)" />
+                      </td>
+                      <td>
+                        <button type="button" class="btn btn-ghost btn-xs text-error" (click)="removeLine(i)" title="Αφαίρεση">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+
+        }
+      </div>
+    </div>
+
+    <!-- ── ΤΙΜΟΛΟΓΗΣΗ ────────────────────────────────────────────────── -->
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body gap-4">
+        <h2 class="card-title text-base">Τιμολόγηση</h2>
+
+        <div class="flex flex-wrap gap-6 items-end">
+          <div class="form-control">
+            <label class="label"><span class="label-text">Έκπτωση (€)</span></label>
+            <input type="number" formControlName="discountAmount" class="input input-bordered input-sm w-36" min="0" step="0.01" />
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">ΦΠΑ / Φόρος (€)</span></label>
+            <input type="number" formControlName="taxAmount" class="input input-bordered input-sm w-36" min="0" step="0.01" />
+          </div>
+
+          <!-- Summary -->
+          <div class="ml-auto text-right space-y-1 min-w-[200px]">
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/60">Υποσύνολο:</span>
+              <span class="font-mono">{{ subtotal() | number:'1.2-2' }} €</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/60">Έκπτωση:</span>
+              <span class="font-mono text-error">- {{ (form.get('discountAmount')?.value ?? 0) | number:'1.2-2' }} €</span>
+            </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/60">ΦΠΑ/Φόρος:</span>
+              <span class="font-mono">+ {{ (form.get('taxAmount')?.value ?? 0) | number:'1.2-2' }} €</span>
+            </div>
+            <div class="divider my-0.5"></div>
+            <div class="flex justify-between text-base font-bold">
+              <span>Σύνολο:</span>
+              <span class="font-mono text-primary">{{ total() | number:'1.2-2' }} €</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ΣΗΜΕΙΩΣΕΙΣ / ΟΡΟΙ ───────────────────────────────────────── -->
+    <div class="card bg-base-100 border border-base-200 shadow-sm">
+      <div class="card-body gap-4">
+        <h2 class="card-title text-base">Σημειώσεις & Όροι</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="form-control">
+            <label class="label"><span class="label-text">Σημειώσεις</span></label>
+            <textarea formControlName="notes" class="textarea textarea-bordered textarea-sm h-28" placeholder="Εσωτερικές σημειώσεις..."></textarea>
+          </div>
+          <div class="form-control">
+            <label class="label"><span class="label-text">Όροι Συμβολαίου</span></label>
+            <textarea formControlName="terms" class="textarea textarea-bordered textarea-sm h-28" placeholder="Όροι και προϋποθέσεις..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ACTIONS ──────────────────────────────────────────────────── -->
+    @if (errorMsg()) {
+      <div class="alert alert-error text-sm py-2">{{ errorMsg() }}</div>
+    }
+
+    <div class="flex gap-3 justify-end">
+      <a routerLink="/contracts" class="btn btn-ghost">Ακύρωση</a>
+      <button type="submit" class="btn btn-primary gap-2" [disabled]="saving()">
+        @if (saving()) { <span class="loading loading-spinner loading-xs"></span> }
+        {{ isEdit() ? 'Αποθήκευση' : 'Δημιουργία Συμβολαίου' }}
+      </button>
+    </div>
+
+  </form>
+  } <!-- /loading -->
+</div>

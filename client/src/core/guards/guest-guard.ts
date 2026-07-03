@@ -7,7 +7,7 @@ const account = inject(AccountService);
   const router = inject(Router);
 
   if (account.isLoggedIn()) {
-    return router.createUrlTree(['/home']);
+    return router.createUrlTree(['/dashboard']);
   }
 
   return true;
