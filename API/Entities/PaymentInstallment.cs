@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace API.Entities;
 // μια πληρωμή μπορεί να αφορά σε πολλά τιμολόγια (π.χ. πληρωμή για 2 τιμολόγια) και ένα τιμολόγιο μπορεί να έχει πολλές πληρωμές (π.χ. μερική πληρωμή)
 
-public class PaymentAllocation : BaseEntity
+public class PaymentInstallment : BaseEntity
 {
     [Required]
     public Guid PaymentId { get; set; }

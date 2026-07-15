@@ -1176,7 +1176,40 @@ namespace API.Data.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("API.Entities.PaymentAllocation", b =>
+            modelBuilder.Entity("API.Entities.PaymentAsset", b =>
+                {
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("PaymentId", "AssetId");
+
+                    b.HasIndex("AssetId");
+
+                    b.ToTable("PaymentAssets");
+                });
+
+            modelBuilder.Entity("API.Entities.PaymentContract", b =>
+                {
+                    b.Property<Guid>("PaymentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ContractId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("PaymentId", "ContractId");
+
+                    b.HasIndex("ContractId");
+
+                    b.ToTable("PaymentContracts");
+                });
+
+            modelBuilder.Entity("API.Entities.PaymentInstallment", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -1243,40 +1276,7 @@ namespace API.Data.Migrations
 
                     b.HasIndex("UpdatedBy");
 
-                    b.ToTable("PaymentAllocations");
-                });
-
-            modelBuilder.Entity("API.Entities.PaymentAsset", b =>
-                {
-                    b.Property<Guid>("PaymentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("AssetId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("TenantId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("PaymentId", "AssetId");
-
-                    b.HasIndex("AssetId");
-
-                    b.ToTable("PaymentAssets");
-                });
-
-            modelBuilder.Entity("API.Entities.PaymentContract", b =>
-                {
-                    b.Property<Guid>("PaymentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ContractId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("PaymentId", "ContractId");
-
-                    b.HasIndex("ContractId");
-
-                    b.ToTable("PaymentContracts");
+                    b.ToTable("PaymentInstallments");
                 });
 
             modelBuilder.Entity("API.Entities.Photo", b =>
@@ -1952,7 +1952,45 @@ namespace API.Data.Migrations
                     b.Navigation("UpdatedByMember");
                 });
 
-            modelBuilder.Entity("API.Entities.PaymentAllocation", b =>
+            modelBuilder.Entity("API.Entities.PaymentAsset", b =>
+                {
+                    b.HasOne("API.Entities.Asset", "Asset")
+                        .WithMany()
+                        .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("API.Entities.Payment", "Payment")
+                        .WithMany("PaymentAssets")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Asset");
+
+                    b.Navigation("Payment");
+                });
+
+            modelBuilder.Entity("API.Entities.PaymentContract", b =>
+                {
+                    b.HasOne("API.Entities.Contract", "Contract")
+                        .WithMany("PaymentContracts")
+                        .HasForeignKey("ContractId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("API.Entities.Payment", "Payment")
+                        .WithMany("PaymentContracts")
+                        .HasForeignKey("PaymentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Contract");
+
+                    b.Navigation("Payment");
+                });
+
+            modelBuilder.Entity("API.Entities.PaymentInstallment", b =>
                 {
                     b.HasOne("API.Entities.Member", "CreatedByMember")
                         .WithMany()
@@ -1997,44 +2035,6 @@ namespace API.Data.Migrations
                     b.Navigation("Tenant");
 
                     b.Navigation("UpdatedByMember");
-                });
-
-            modelBuilder.Entity("API.Entities.PaymentAsset", b =>
-                {
-                    b.HasOne("API.Entities.Asset", "Asset")
-                        .WithMany()
-                        .HasForeignKey("AssetId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Payment", "Payment")
-                        .WithMany("PaymentAssets")
-                        .HasForeignKey("PaymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Asset");
-
-                    b.Navigation("Payment");
-                });
-
-            modelBuilder.Entity("API.Entities.PaymentContract", b =>
-                {
-                    b.HasOne("API.Entities.Contract", "Contract")
-                        .WithMany("PaymentContracts")
-                        .HasForeignKey("ContractId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("API.Entities.Payment", "Payment")
-                        .WithMany("PaymentContracts")
-                        .HasForeignKey("PaymentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Contract");
-
-                    b.Navigation("Payment");
                 });
 
             modelBuilder.Entity("API.Entities.Photo", b =>

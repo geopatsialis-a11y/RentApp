@@ -36,7 +36,7 @@ public class AppDbContext(
     public DbSet<Payment> Payments { get; set; }
     public DbSet<PaymentAsset> PaymentAssets { get; set; }
     public DbSet<PaymentContract> PaymentContracts { get; set; }
-    public DbSet<PaymentAllocation> PaymentAllocations { get; set; }
+    public DbSet<PaymentInstallment> PaymentInstallments { get; set; }
     public DbSet<Tenant> Tenants { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -136,14 +136,14 @@ public class AppDbContext(
             .HasForeignKey(pc => pc.ContractId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // ── PaymentAllocation ───────────────────────────────────────────
-        builder.Entity<PaymentAllocation>()
+        // ── PaymentInstallment ───────────────────────────────────────────
+        builder.Entity<PaymentInstallment>()
             .HasOne(pa => pa.Payment)
             .WithMany(p => p.Allocations)
             .HasForeignKey(pa => pa.PaymentId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Entity<PaymentAllocation>()
+        builder.Entity<PaymentInstallment>()
             .HasOne(pa => pa.Installment)
             .WithMany(i => i.Allocations)
             .HasForeignKey(pa => pa.InstallmentId)

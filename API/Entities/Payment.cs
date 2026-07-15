@@ -37,5 +37,5 @@ public class Payment : BaseEntity
     // Navigation
     public ICollection<PaymentContract>   PaymentContracts { get; set; } = new List<PaymentContract>();
     public ICollection<PaymentAsset>      PaymentAssets    { get; set; } = new List<PaymentAsset>();
-    public ICollection<PaymentAllocation> Allocations      { get; set; } = new List<PaymentAllocation>();
+    public ICollection<PaymentInstallment> Allocations      { get; set; } = new List<PaymentInstallment>();
 }

@@ -30,7 +30,7 @@ public class Installment : BaseEntity
     [Column(TypeName = "decimal(18,2)")]
     public decimal TotalAmount { get; set; }  // Amount + TaxAmount
 
-    // Denormalized — ενημερώνεται σε κάθε PaymentAllocation
+    // Denormalized — ενημερώνεται σε κάθε PaymentInstallment
     [Column(TypeName = "decimal(18,2)")]
     public decimal AllocatedAmount { get; set; } = 0;
 
@@ -43,5 +43,5 @@ public class Installment : BaseEntity
     [ForeignKey(nameof(ContractId))]
     public Contract Contract { get; set; } = null!;
 
-    public ICollection<PaymentAllocation> Allocations { get; set; } = new List<PaymentAllocation>();
+    public ICollection<PaymentInstallment> Allocations { get; set; } = new List<PaymentInstallment>();
 }

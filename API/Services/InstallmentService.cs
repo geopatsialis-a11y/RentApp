@@ -213,7 +213,7 @@ public class InstallmentService(
             if (outstanding <= 0) continue;
 
             var toAllocate = Math.Min(remaining, outstanding);
-            var alloc = new PaymentAllocation
+            var alloc = new PaymentInstallment
             {
                 TenantId        = payment.TenantId,
                 PaymentId       = payment.Id,
@@ -222,7 +222,7 @@ public class InstallmentService(
                 CreatedBy       = userId
             };
 
-            await context.PaymentAllocations.AddAsync(alloc);
+            await context.PaymentInstallments.AddAsync(alloc);
             inv.AllocatedAmount += toAllocate;
             inv.Status = inv.AllocatedAmount >= inv.TotalAmount
                 ? InstallmentStatus.Paid : InstallmentStatus.PartiallyPaid;
@@ -274,7 +274,7 @@ public class InstallmentService(
         //         throw new BadRequestException(
         //             $"Ποσό {item.Amount:N2} υπερβαίνει το εκκρεμές υπόλοιπο {outstanding:N2} για δόση #{installment.InstallmentNumber}.");
 
-        //     var alloc = new PaymentAllocation
+        //     var alloc = new PaymentInstallment
         //     {
         //         TenantId        = payment.TenantId,
         //         PaymentId       = payment.Id,
@@ -284,7 +284,7 @@ public class InstallmentService(
         //         CreatedBy       = userId
         //     };
 
-        //     await context.PaymentAllocations.AddAsync(alloc);
+        //     await context.PaymentInstallments.AddAsync(alloc);
         //     installment.AllocatedAmount += item.Amount;
         //     installment.Status = installment.AllocatedAmount >= installment.TotalAmount
         //         ? InstallmentStatus.Paid : InstallmentStatus.PartiallyPaid;
@@ -299,7 +299,7 @@ public class InstallmentService(
 
     public async Task DeallocateAsync(Guid allocationId, string userId)
     {
-        var alloc = await context.PaymentAllocations
+        var alloc = await context.PaymentInstallments
             .Include(a => a.Payment)
             .Include(a => a.Installment)
             .FirstOrDefaultAsync(a => a.Id == allocationId)
