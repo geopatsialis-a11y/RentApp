@@ -5,7 +5,7 @@ namespace API.Entities;
 public class FileAttachment: BaseEntity
 {
     [Required, MaxLength(50)]
-    public string EntityType { get; set; } = null!;  // π.χ. "Payment", "Invoice"
+    public string EntityType { get; set; } = null!;  // π.χ. "Payment", "Installment"
 
     [Required]
     public Guid EntityId { get; set; }               // ← αυτό λείπει

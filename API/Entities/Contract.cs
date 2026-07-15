@@ -38,7 +38,7 @@ public class Contract : BaseEntity
 
     // Navigation
     public ICollection<ContractAsset>    ContractAssets   { get; set; } = new List<ContractAsset>();
-    public ICollection<Invoice>          Invoices         { get; set; } = new List<Invoice>();
+    public ICollection<Installment>          Installments         { get; set; } = new List<Installment>();
     public ICollection<PaymentContract>  PaymentContracts { get; set; } = new List<PaymentContract>();
 
     [ForeignKey(nameof(CustomerId))]

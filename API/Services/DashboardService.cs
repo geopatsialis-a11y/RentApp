@@ -179,7 +179,7 @@ public class DashboardService(AppDbContext context) : IDashboardService
         // ── Πρόβλεψη εισπράξεων επόμενων 3 μηνών (από δόσεις) ─────
         // ΣΗΜΕΙΩΣΗ: αν το DbSet σου λέγεται διαφορετικά, άλλαξε το context.Installments
         var next3Months = startOfMonth.AddMonths(3);
-        var upcomingRaw = await context.Invoices
+        var upcomingRaw = await context.Installments
             .Where(i => //!i.IsPaid && 
             i.DueDate >= now && i.DueDate < next3Months)
             .Select(i => new { i.DueDate, i.Amount })

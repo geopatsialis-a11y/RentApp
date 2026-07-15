@@ -30,7 +30,7 @@ public class AppDbContext(
     public DbSet<FileAttachment> FileAttachments { get; set; }
     public DbSet<Photo> Photos { get; set; }
     // public DbSet<Installment>   Installments {get; set;}
-    public DbSet<Invoice> Invoices { get; set; }
+    public DbSet<Installment> Installments { get; set; }
     public DbSet<Member> Members { get; set; }
     public DbSet<MemberInvite> MemberInvites { get; set; }
     public DbSet<Payment> Payments { get; set; }
@@ -144,9 +144,9 @@ public class AppDbContext(
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<PaymentAllocation>()
-            .HasOne(pa => pa.Invoice)
+            .HasOne(pa => pa.Installment)
             .WithMany(i => i.Allocations)
-            .HasForeignKey(pa => pa.InvoiceId)
+            .HasForeignKey(pa => pa.InstallmentId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // ── PaymentAsset ────────────────────────────────────────────────
@@ -166,11 +166,11 @@ public class AppDbContext(
             .OnDelete(DeleteBehavior.Restrict);
 
         // ── Invoice (Installment) ───────────────────────────────────────
-        builder.Entity<Invoice>()
+        builder.Entity<Installment>()
             .HasIndex(i => new { i.ContractId, i.InstallmentNumber })
             .IsUnique();
 
-        builder.Entity<Invoice>()
+        builder.Entity<Installment>()
             .HasIndex(i => i.TenantId);
 
         // ── Payment ─────────────────────────────────────────────────────

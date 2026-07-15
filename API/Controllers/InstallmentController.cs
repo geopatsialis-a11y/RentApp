@@ -76,11 +76,11 @@ public class InstallmentController(IInstallmentService installmentService) : Bas
         return NoContent();
     }
 
-    // DELETE api/installment/{invoiceId}/cancel
-    [HttpDelete("{invoiceId:guid}/cancel")]
-    public async Task<IActionResult> Cancel(Guid invoiceId)
+    // DELETE api/installment/{installmentId}/cancel
+    [HttpDelete("{installmentId:guid}/cancel")]
+    public async Task<IActionResult> Cancel(Guid installmentId)
     {
-        await installmentService.CancelInstallmentAsync(invoiceId, User.GetMemberId().ToString());
+        await installmentService.CancelInstallmentAsync(installmentId, User.GetMemberId().ToString());
         return NoContent();
     }
 

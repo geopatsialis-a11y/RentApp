@@ -11,7 +11,7 @@ public class PaymentAllocation : BaseEntity
     public Guid PaymentId { get; set; }
 
     [Required]
-    public Guid InvoiceId { get; set; }
+    public Guid InstallmentId { get; set; }
 
     [Column(TypeName = "decimal(18,2)")]
     public decimal AllocatedAmount { get; set; }
@@ -23,6 +23,6 @@ public class PaymentAllocation : BaseEntity
     [ForeignKey(nameof(PaymentId))]
     public Payment Payment { get; set; } = null!;
 
-    [ForeignKey(nameof(InvoiceId))]
-    public Invoice Invoice { get; set; } = null!;
+    [ForeignKey(nameof(InstallmentId))]
+    public Installment Installment { get; set; } = null!;
 }

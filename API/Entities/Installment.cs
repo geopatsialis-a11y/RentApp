@@ -5,7 +5,7 @@ using static API.Entities.Enums;
 
 namespace API.Entities;
 
-public class Invoice : BaseEntity
+public class Installment : BaseEntity
 {
     [Required]
     public Guid ContractId { get; set; }
@@ -15,7 +15,7 @@ public class Invoice : BaseEntity
 
     // Προαιρετικός αριθμός τιμολογίου (αν εκδίδεται και φορολογικό παραστατικό)
     [MaxLength(50)]
-    public string? InvoiceNumber { get; set; }
+    public string? InvoiceNumber  { get; set; }
 
     public DateTime PeriodStart { get; set; }
     public DateTime PeriodEnd { get; set; }
